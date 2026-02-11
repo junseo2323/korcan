@@ -3,7 +3,7 @@ version: '3.8'
 services:
   app:
     container_name: korcan-nextjs
-    image: ghcr.io/junseo2323/korcan:latest
+    image: ghcr.io/junseo2323/korcan-web:latest
     restart: always
     env_file:
       - .env
