@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '../../../auth/[...nextauth]/route'
+import { authOptions } from '@/lib/auth'
 
 export async function GET(
     req: Request,
@@ -35,6 +35,8 @@ export async function POST(
     const { id } = await params
     const body = await req.json()
     const { content } = body
+
+    console.log('[API] Creating comment:', { id, content, userId: session.user.id })
 
     if (!content) {
         return NextResponse.json({ error: 'Content is required' }, { status: 400 })

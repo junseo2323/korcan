@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  app:
+    container_name: korcan-nextjs
+    image: ghcr.io/junseo2323/korcan:latest
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+    networks:
+      - web_network
+
+  nginx:
+    container_name: korcan-nginx
+    image: nginx:alpine
+    restart: always
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - app
+    networks:
+      - web_network
+
+networks:
+  web_network:
+    driver: bridge

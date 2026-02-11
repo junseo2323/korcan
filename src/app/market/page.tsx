@@ -133,18 +133,18 @@ export default function MarketPage() {
         {products.map(product => (
           <ProductCard key={product.id} onClick={() => router.push(`/market/${product.id}`)}>
             <ImageWrapper>
-              <ProductImage src={product.imageUrl} alt={product.title} />
-              {product.status !== 'selling' && (
-                <StatusBadge>{product.status === 'reserved' ? '예약중' : '판매완료'}</StatusBadge>
+              <ProductImage src={product.imageUrl || 'https://placehold.co/400/png?text=No+Image'} alt={product.title} />
+              {product.status !== 'SELLING' && (
+                <StatusBadge>{product.status === 'RESERVED' ? '예약중' : '판매완료'}</StatusBadge>
               )}
             </ImageWrapper>
             <CardContent>
               <ProductTitle>{product.title}</ProductTitle>
-              <Price>${product.price}</Price>
+              <Price>${product.price.toLocaleString()}</Price>
               <Meta>
                 <span>{product.category}</span>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
-                  <Heart size={10} fill={product.likes > 0 ? 'currentColor' : 'none'} /> {product.likes}
+                  <Heart size={10} fill={product._count?.likes > 0 ? 'currentColor' : 'none'} /> {product._count?.likes || 0}
                 </span>
               </Meta>
             </CardContent>

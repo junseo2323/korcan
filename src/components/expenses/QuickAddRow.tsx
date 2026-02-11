@@ -1,8 +1,9 @@
 'use client'
 
 import React, { useState } from 'react'
-import styled from 'styled-components'
-import { Plus, Coffee, ShoppingBag, Home, Bus, Zap, MoreHorizontal, Utensils, Check } from 'lucide-react'
+import styled, { keyframes } from 'styled-components'
+import { Plus, Coffee, ShoppingBag, Home, Bus, Zap, MoreHorizontal, Utensils, Check, Camera, Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
 import { useExpenses } from '@/hooks/useExpenses'
 import { v4 as uuidv4 } from 'uuid'
 import { format } from 'date-fns'
@@ -83,6 +84,19 @@ const SubmitButton = styled.button`
   }
 `
 
+const rotate = keyframes`
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+`
+
+const StyledLoader = styled(Loader2)`
+  animation: ${rotate} 1s linear infinite;
+`
+
 // Simplified categories for quick add
 const CATEGORIES = ['Food', 'Transport', 'Shopping', 'Other']
 
@@ -97,6 +111,54 @@ export default function QuickAddRow({ selectedDate }: Props) {
   const [amount, setAmount] = useState('')
   const [note, setNote] = useState('')
   const [category, setCategory] = useState('Food')
+  const [tags, setTags] = useState<string[]>([])
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const fileInputRef = React.useRef<HTMLInputElement>(null)
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setIsAnalyzing(true)
+    const formData = new FormData()
+    formData.append('file', file)
+
+    try {
+      toast.info('Analyzing receipt...')
+      const response = await fetch('/api/receipt/analyze', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!response.ok) {
+        throw new Error('Analysis failed')
+      }
+
+      const data = await response.json()
+
+      if (data.total_amount) setAmount(data.total_amount.toString())
+      if (data.merchant_name) setNote(data.merchant_name)
+      if (data.tags && Array.isArray(data.tags)) setTags(data.tags)
+
+      if (data.category && CATEGORIES.includes(data.category)) {
+        setCategory(data.category)
+      } else if (data.category) {
+        // Map unknown categories to 'Other' or keep existing logic
+        setCategory('Other')
+      }
+
+      toast.success('Receipt analyzed successfully!')
+    } catch (error) {
+      console.error('Error analyzing receipt:', error)
+      toast.error('Failed to analyze receipt')
+    } finally {
+      setIsAnalyzing(false)
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+    }
+  }
 
   const cycleCategory = () => {
     const idx = CATEGORIES.indexOf(category)
@@ -117,12 +179,13 @@ export default function QuickAddRow({ selectedDate }: Props) {
       category,
       date: format(dateToUse, 'yyyy-MM-dd'),
       note: note || category,
-      tags: []
+      tags: tags
     }
 
     addExpense(newExpense)
     setAmount('')
     setNote('')
+    setTags([])
   }
 
   const getIcon = (cat: string) => {
@@ -138,6 +201,20 @@ export default function QuickAddRow({ selectedDate }: Props) {
     <Container>
       <IconSelect onClick={cycleCategory} type="button">
         {getIcon(category)}
+      </IconSelect>
+      <input
+        type="file"
+        ref={fileInputRef}
+        style={{ display: 'none' }}
+        accept="image/*"
+        onChange={handleFileUpload}
+      />
+      <IconSelect
+        as="div"
+        onClick={() => !isAnalyzing && fileInputRef.current?.click()}
+        style={{ cursor: isAnalyzing ? 'wait' : 'pointer', opacity: isAnalyzing ? 0.7 : 1 }}
+      >
+        {isAnalyzing ? <StyledLoader size={18} /> : <Camera size={18} />}
       </IconSelect>
       <InputGroup>
         <AmountInput

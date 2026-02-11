@@ -1,9 +1,10 @@
 'use client'
 
-import React from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import styled from 'styled-components'
-import { Bell, User } from 'lucide-react'
-import { useCurrency } from '@/contexts/CurrencyContext'
+import { Bell, User, MessageCircle } from 'lucide-react'
+import { signIn, signOut, useSession } from 'next-auth/react'
+import ProfilePopover from './ProfilePopover'
 
 const HeaderContainer = styled.header`
   position: fixed;
@@ -30,19 +31,7 @@ const Logo = styled.div`
 const RightSection = styled.div`
   display: flex;
   align-items: center;
-  gap: 1rem;
-`
-
-const ExchangeRateBadge = styled.div`
-  display: flex;
-  align-items: center;
   gap: 0.5rem;
-  padding: 0.25rem 0.75rem;
-  background-color: ${({ theme }) => theme.colors.background.secondary};
-  border-radius: 100px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: ${({ theme }) => theme.colors.text.secondary};
 `
 
 const IconButton = styled.button`
@@ -53,76 +42,71 @@ const IconButton = styled.button`
   justify-content: center;
   color: ${({ theme }) => theme.colors.text.primary};
   cursor: pointer;
-  padding: 0.25rem;
+  padding: 0.5rem;
   border-radius: 50%;
   transition: background-color 0.2s;
+  position: relative;
 
   &:hover {
     background-color: ${({ theme }) => theme.colors.neutral.gray100};
   }
 `
 
-const ToggleButton = styled.button<{ $active: boolean }>`
-    background-color: ${({ theme, $active }) => $active ? theme.colors.primary : 'transparent'};
-    color: ${({ theme, $active }) => $active ? 'white' : theme.colors.text.secondary};
-    border: 1px solid ${({ theme, $active }) => $active ? theme.colors.primary : theme.colors.neutral.gray300};
-    border-radius: 4px;
-    padding: 2px 8px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-
-    &:first-child {
-        border-top-right-radius: 0;
-        border-bottom-right-radius: 0;
-        border-right: none;
-    }
-    &:last-child {
-        border-top-left-radius: 0;
-        border-bottom-left-radius: 0;
-    }
+const PopoverWrapper = styled.div`
+    position: relative;
 `
 
-const ToggleGroup = styled.div`
-    display: flex;
-    align-items: center;
-`
-
-import { signIn, signOut, useSession } from 'next-auth/react'
+import { useChat } from '@/contexts/ChatContext'
 
 export default function TopHeader() {
-  const { exchangeRate, currency, setCurrency } = useCurrency()
   const { data: session } = useSession()
+  const { togglePopup } = useChat()
+  const [showProfile, setShowProfile] = useState(false)
+  const profileRef = useRef<HTMLDivElement>(null)
+
+  // Close popover when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
+        setShowProfile(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [profileRef]);
 
   return (
     <HeaderContainer>
       <Logo>KorCan</Logo>
       <RightSection>
-        {/* Toggle Group code remains same, omitted for brevity if no changes needed there, but providing full block for safety or just the changed parts */}
-        <ToggleGroup>
-          <ToggleButton $active={currency === 'KRW'} onClick={() => setCurrency('KRW')}>KRW</ToggleButton>
-          <ToggleButton $active={currency === 'CAD'} onClick={() => setCurrency('CAD')}>CAD</ToggleButton>
-        </ToggleGroup>
-
-        <ExchangeRateBadge>
-          <span>🇨🇦 $1</span>
-          <span style={{ color: '#ccc' }}>|</span>
-          <span>₩{exchangeRate}</span>
-        </ExchangeRateBadge>
+        {session && (
+          <IconButton onClick={togglePopup} aria-label="Chat">
+            <MessageCircle size={24} strokeWidth={1.5} />
+          </IconButton>
+        )}
 
         {session ? (
-          <IconButton onClick={() => signOut()} aria-label="Sign Out">
-            {session.user?.image ? (
-              <img
-                src={session.user.image}
-                alt="Profile"
-                style={{ width: 24, height: 24, borderRadius: '50%' }}
+          <PopoverWrapper ref={profileRef}>
+            <IconButton onClick={() => setShowProfile(!showProfile)} aria-label="Profile">
+              {session.user?.image ? (
+                <img
+                  src={session.user.image}
+                  alt="Profile"
+                  style={{ width: 28, height: 28, borderRadius: '50%' }}
+                />
+              ) : (
+                <User size={24} strokeWidth={1.5} />
+              )}
+            </IconButton>
+            {showProfile && (
+              <ProfilePopover
+                user={session.user || {}}
+                onClose={() => setShowProfile(false)}
               />
-            ) : (
-              <User size={20} />
             )}
-          </IconButton>
+          </PopoverWrapper>
         ) : (
           <button
             onClick={() => signIn('kakao')}
@@ -130,10 +114,10 @@ export default function TopHeader() {
               backgroundColor: '#FEE500',
               color: '#000000',
               border: 'none',
-              padding: '4px 12px',
-              borderRadius: '4px',
+              padding: '6px 14px',
+              borderRadius: '6px',
               fontWeight: 600,
-              fontSize: '0.8rem',
+              fontSize: '0.85rem',
               cursor: 'pointer'
             }}
           >

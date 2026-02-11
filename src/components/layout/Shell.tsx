@@ -5,6 +5,8 @@ import { usePathname } from 'next/navigation'
 import TopHeader from './TopHeader'
 import BottomNavigation from './BottomNavigation'
 import { Toaster } from 'sonner'
+import { ChatProvider } from '@/contexts/ChatContext'
+import ChatPopup from '@/components/chat/ChatPopup'
 import styled from 'styled-components'
 
 const MobileWrapper = styled.div<{ $isAuthPage: boolean }>`
@@ -20,13 +22,14 @@ export default function Shell({ children }: { children: React.ReactNode }) {
     const isAuthPage = pathname === '/login' || pathname === '/register'
 
     return (
-        <>
+        <ChatProvider>
             {!isAuthPage && <TopHeader />}
             <MobileWrapper $isAuthPage={isAuthPage}>
                 {children}
             </MobileWrapper>
             {!isAuthPage && <BottomNavigation />}
+            <ChatPopup />
             <Toaster position="top-center" />
-        </>
+        </ChatProvider>
     )
 }

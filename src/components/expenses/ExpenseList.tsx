@@ -77,6 +77,21 @@ const Subtitle = styled.div`
   color: ${({ theme }) => theme.colors.text.secondary};
 `
 
+const TagsContainer = styled.div`
+  display: flex;
+  gap: 0.25rem;
+  margin-top: 0.25rem;
+  flex-wrap: wrap;
+`
+
+const TagBadge = styled.span`
+  font-size: 0.7rem;
+  padding: 0.1rem 0.3rem;
+  background-color: ${({ theme }) => theme.colors.neutral.gray100};
+  color: ${({ theme }) => theme.colors.text.secondary};
+  border-radius: 4px;
+`
+
 const RightSection = styled.div`
   text-align: right;
   display: flex;
@@ -205,6 +220,13 @@ export default function ExpenseList({ selectedDate }: Props) {
                     <TextInfo>
                       <CategoryTitle>{exp.category}</CategoryTitle>
                       <Subtitle>{exp.note || `${format(parseISO(exp.date), 'HH:mm')} 결제`}</Subtitle>
+                      {exp.tags && exp.tags.length > 0 && (
+                        <TagsContainer>
+                          {exp.tags.map((tag, idx) => (
+                            <TagBadge key={idx}>#{tag}</TagBadge>
+                          ))}
+                        </TagsContainer>
+                      )}
                     </TextInfo>
                   </LeftSection>
                   <RightSection>

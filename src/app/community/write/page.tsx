@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import styled from 'styled-components'
 import { useRouter } from 'next/navigation'
 import { usePosts } from '@/contexts/PostContext'
@@ -86,13 +86,27 @@ export default function WritePostPage() {
   const { addPost } = usePosts()
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
+  const [category, setCategory] = useState('일반')
   const [loading, setLoading] = useState(false)
+  const [existingCategories, setExistingCategories] = useState<string[]>(['일반', '질문', '정보', '잡담'])
+
+  useEffect(() => {
+    fetch('/api/posts/categories')
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          const unique = Array.from(new Set([...existingCategories, ...data]))
+          setExistingCategories(unique)
+        }
+      })
+      .catch(console.error)
+  }, [])
 
   const handleSubmit = async () => {
     if (!title || !content) return
     setLoading(true)
     try {
-      await addPost(title, content)
+      await addPost(title, content, category)
       router.back()
     } catch (e) {
       alert('글 작성에 실패했습니다.')
@@ -110,6 +124,40 @@ export default function WritePostPage() {
       </Header>
 
       <Form>
+        <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
+          {existingCategories.map(cat => (
+            <button
+              key={cat}
+              onClick={() => setCategory(cat)}
+              style={{
+                padding: '0.5rem 1rem',
+                borderRadius: '20px',
+                border: 'none',
+                backgroundColor: category === cat ? '#3b82f6' : '#f3f4f6',
+                color: category === cat ? 'white' : '#4b5563',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                fontSize: '0.9rem',
+                fontWeight: 600
+              }}
+            >
+              {cat}
+            </button>
+          ))}
+          <input
+            placeholder="직접 입력"
+            value={existingCategories.includes(category) ? '' : category}
+            onChange={e => setCategory(e.target.value)}
+            style={{
+              padding: '0.5rem 1rem',
+              borderRadius: '20px',
+              border: '1px solid #e5e7eb',
+              outline: 'none',
+              fontSize: '0.9rem',
+              minWidth: '80px'
+            }}
+          />
+        </div>
         <Input
           placeholder="제목"
           value={title}

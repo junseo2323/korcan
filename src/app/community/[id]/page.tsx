@@ -9,7 +9,7 @@ import { ChevronLeft, ThumbsUp, MessageCircle, Send } from 'lucide-react'
 const Container = styled.div`
   display: flex;
   flex-direction: column;
-  padding-bottom: 80px;
+  padding-bottom: 120px; /* Increased to account for input box + bottom nav */
   min-height: 100vh;
   background-color: white;
 `
@@ -110,7 +110,7 @@ const CommentDate = styled.span`
 
 const CommentInputBox = styled.div`
   position: fixed;
-  bottom: 0;
+  bottom: calc(60px + env(safe-area-inset-bottom)); /* Sit above BottomNavigation */
   left: 0;
   right: 0;
   padding: 1rem;
@@ -119,6 +119,8 @@ const CommentInputBox = styled.div`
   display: flex;
   gap: 0.5rem;
   align-items: center;
+  z-index: 900; /* Below Nav (1000) but above content */
+  /* Remove extra padding-bottom since it's above the safe area now */
 `
 
 const Input = styled.input`
@@ -138,14 +140,27 @@ const SendButton = styled.button`
   cursor: pointer;
 `
 
+import ConfirmModal from '@/components/ui/ConfirmModal'
+import Toast from '@/components/ui/Toast'
+import { useSession } from 'next-auth/react'
+
 export default function PostDetailPage() {
   const params = useParams()
   const router = useRouter()
+  const { data: session } = useSession()
+  const { updatePost } = usePosts()
 
-  // We fetch details independently now
   const [post, setPost] = useState<any>(null)
   const [comment, setComment] = useState('')
   const [loading, setLoading] = useState(true)
+
+  // UI State
+  const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean, commentId: string | null }>({ isOpen: false, commentId: null })
+  const [toast, setToast] = useState<{ show: boolean, message: string }>({ show: false, message: '' })
+
+  const showToast = (message: string) => {
+    setToast({ show: true, message })
+  }
 
   const fetchPostDetail = async () => {
     try {
@@ -169,14 +184,17 @@ export default function PostDetailPage() {
     if (!post) return
     // Optimistic
     const wasLiked = post.isLiked
-    setPost((prev: any) => ({
-      ...prev,
-      isLiked: !wasLiked,
-      _count: {
-        ...prev._count,
-        likes: prev._count.likes + (wasLiked ? -1 : 1)
+    setPost((prev: any) => {
+      const newLikes = prev._count.likes + (wasLiked ? -1 : 1)
+      const updated = {
+        ...prev,
+        isLiked: !wasLiked,
+        _count: { ...prev._count, likes: newLikes }
       }
-    }))
+      // Sync global context
+      updatePost(post.id, { _count: { ...post._count, likes: newLikes } })
+      return updated
+    })
 
     try {
       await fetch(`/api/posts/${post.id}/like`, { method: 'POST' })
@@ -208,6 +226,16 @@ export default function PostDetailPage() {
       if (res.ok) {
         setComment('')
         fetchPostDetail() // Reload to see new comment
+
+        // Sync global context (increment comment count)
+        if (post) {
+          updatePost(post.id, {
+            _count: {
+              ...post._count,
+              comments: (post._count?.comments || 0) + 1
+            }
+          })
+        }
       }
     } catch (e) { console.error(e) }
   }
@@ -244,15 +272,38 @@ export default function PostDetailPage() {
 
       <CommentsSection>
         <CommentList>
-          {post.comments?.map((c: any) => (
-            <CommentItem key={c.id}>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <CommentAuthor>{c.user?.name || c.authorName || '익명'}</CommentAuthor>
-                <CommentDate>{new Date(c.createdAt).toLocaleString()}</CommentDate>
+          {post.comments?.map((comment: any) =>
+            <div key={comment.id} style={{
+              padding: '1rem',
+              borderBottom: '1px solid #f3f4f6',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'flex-start'
+            }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                  <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>{comment.user?.name || comment.authorName || '익명'}</span>
+                  <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>{new Date(comment.createdAt).toLocaleDateString()}</span>
+                </div>
+                <p style={{ fontSize: '0.95rem', color: '#374151', lineHeight: 1.5 }}>{comment.content}</p>
               </div>
-              <CommentText>{c.content}</CommentText>
-            </CommentItem>
-          ))}
+              {session?.user?.id === comment.userId && (
+                <button
+                  onClick={() => setDeleteModal({ isOpen: true, commentId: comment.id })}
+                  style={{
+                    fontSize: '0.8rem',
+                    color: '#ef4444',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    padding: '0.25rem'
+                  }}
+                >
+                  삭제
+                </button>
+              )}
+            </div>
+          )}
         </CommentList>
       </CommentsSection>
 
@@ -260,15 +311,55 @@ export default function PostDetailPage() {
 
       <CommentInputBox>
         <Input
-          placeholder="댓글을 남겨보세요."
+          placeholder={session ? "댓글을 남겨보세요." : "로그인이 필요합니다."}
           value={comment}
           onChange={e => setComment(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && handleSendComment()}
+          disabled={!session}
         />
-        <SendButton onClick={handleSendComment}>
+        <SendButton onClick={handleSendComment} disabled={!session} style={{ opacity: session ? 1 : 0.5 }}>
           <Send size={24} />
         </SendButton>
       </CommentInputBox>
+
+      {/* Confirmation Modal */}
+      <ConfirmModal
+        isOpen={deleteModal.isOpen}
+        title="댓글 삭제"
+        message="정말로 이 댓글을 삭제하시겠습니까?"
+        onClose={() => setDeleteModal({ ...deleteModal, isOpen: false })}
+        onConfirm={async () => {
+          if (!deleteModal.commentId) return
+          try {
+            await fetch(`/api/comments/${deleteModal.commentId}`, { method: 'DELETE' })
+            setPost((prev: any) => {
+              const newComments = prev._count.comments - 1
+              const updated = {
+                ...prev,
+                comments: prev.comments.filter((c: any) => c.id !== deleteModal.commentId),
+                _count: { ...prev._count, comments: newComments }
+              }
+              updatePost(post.id, {
+                _count: { ...post._count, comments: newComments }
+              })
+              return updated
+            })
+            showToast('댓글이 삭제되었습니다.')
+          } catch (e) {
+            showToast('댓글 삭제 실패')
+          } finally {
+            setDeleteModal({ isOpen: false, commentId: null })
+          }
+        }}
+      />
+
+      {/* Toast */}
+      {toast.show && (
+        <Toast
+          message={toast.message}
+          onClose={() => setToast({ ...toast, show: false })}
+        />
+      )}
 
     </Container>
   )

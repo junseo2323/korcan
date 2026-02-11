@@ -1,12 +1,16 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '../auth/[...nextauth]/route'
+import { authOptions } from '@/lib/auth'
 
-export async function GET() {
-    // Publicly accessible, but maybe we want to know if user liked it?
-    // For now, just return list. Order by createdAt desc.
+export async function GET(req: Request) {
+    const { searchParams } = new URL(req.url)
+    const category = searchParams.get('category')
+
+    const where = category && category !== 'All' ? { category } : {}
+
     const posts = await prisma.post.findMany({
+        where,
         orderBy: { createdAt: 'desc' },
         include: {
             user: {
@@ -38,6 +42,7 @@ export async function POST(req: Request) {
         data: {
             title,
             content,
+            category: category || '일반',
             userId: session.user.id
         }
     })

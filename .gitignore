@@ -48,3 +48,10 @@ next-env.d.ts
 prisma/dev.db
 prisma/dev.db-journal
 
+
+# terraform
+.terraform
+terraform/.terraform
+terraform/.terraform.lock.hcl
+*.tfstate
+*.tfstate.backup

@@ -7,6 +7,7 @@ export interface Post {
     id: string
     title: string
     content: string
+    category: string
     views: number
     userId: string
     user: {
@@ -23,7 +24,8 @@ export interface Post {
 interface PostContextType {
     posts: Post[]
     refreshPosts: () => void
-    addPost: (title: string, content: string) => Promise<void>
+    addPost: (title: string, content: string, category?: string) => Promise<void>
+    updatePost: (id: string, updates: Partial<Post>) => void
 }
 
 const PostContext = createContext<PostContextType | undefined>(undefined)
@@ -51,12 +53,12 @@ export function PostProvider({ children }: { children: React.ReactNode }) {
         fetchPosts()
     }
 
-    const addPost = async (title: string, content: string) => {
+    const addPost = async (title: string, content: string, category: string = '일반') => {
         try {
             const res = await fetch('/api/posts', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title, content })
+                body: JSON.stringify({ title, content, category })
             })
             if (res.ok) {
                 fetchPosts()
@@ -69,8 +71,14 @@ export function PostProvider({ children }: { children: React.ReactNode }) {
         }
     }
 
+    const updatePost = (id: string, updates: Partial<Post>) => {
+        setPosts(prev => prev.map(post =>
+            post.id === id ? { ...post, ...updates } : post
+        ))
+    }
+
     return (
-        <PostContext.Provider value={{ posts, refreshPosts, addPost }}>
+        <PostContext.Provider value={{ posts, refreshPosts, addPost, updatePost }}>
             {children}
         </PostContext.Provider>
     )

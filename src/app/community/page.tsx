@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import styled from 'styled-components'
 import { useRouter } from 'next/navigation'
 import { usePosts } from '@/contexts/PostContext'
@@ -109,6 +109,24 @@ const IconText = styled.div`
 export default function CommunityPage() {
   const router = useRouter()
   const { posts } = usePosts()
+  const [selectedCategory, setSelectedCategory] = useState('All')
+  const [categories, setCategories] = useState<string[]>(['All', '일반', '질문', '정보', '잡담'])
+
+  useEffect(() => {
+    fetch('/api/posts/categories')
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          const unique = Array.from(new Set(['All', ...data]))
+          setCategories(unique)
+        }
+      })
+      .catch(console.error)
+  }, [])
+
+  const filteredPosts = selectedCategory === 'All'
+    ? posts
+    : posts.filter(post => post.category === selectedCategory)
 
   return (
     <Container>
@@ -120,14 +138,49 @@ export default function CommunityPage() {
         </WriteButton>
       </Header>
 
+      <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', paddingBottom: '1rem', marginBottom: '1rem' }}>
+        {categories.map(cat => (
+          <button
+            key={cat}
+            onClick={() => setSelectedCategory(cat)}
+            style={{
+              padding: '0.5rem 1rem',
+              borderRadius: '20px',
+              border: 'none',
+              backgroundColor: selectedCategory === cat ? '#3b82f6' : 'white',
+              color: selectedCategory === cat ? 'white' : '#4b5563',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              fontSize: '0.9rem',
+              fontWeight: 600,
+              boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+            }}
+          >
+            {cat}
+          </button>
+        ))}
+      </div>
+
       <PostList>
-        {posts.length === 0 ? (
+        {filteredPosts.length === 0 ? (
           <div style={{ textAlign: 'center', color: '#888', marginTop: '3rem' }}>
-            첫 번째 글을 작성해보세요!
+            {selectedCategory === 'All' ? '첫 번째 글을 작성해보세요!' : '해당 카테고리에 글이 없습니다.'}
           </div>
         ) : (
-          posts.map(post => (
+          filteredPosts.map(post => (
             <PostCard key={post.id} onClick={() => router.push(`/community/${post.id}`)}>
+              <div style={{ marginBottom: '0.5rem' }}>
+                <span style={{
+                  fontSize: '0.75rem',
+                  color: '#3b82f6',
+                  backgroundColor: '#eff6ff',
+                  padding: '2px 8px',
+                  borderRadius: '10px',
+                  fontWeight: 600
+                }}>
+                  {post.category || '일반'}
+                </span>
+              </div>
               <PostTitle>{post.title}</PostTitle>
               <PostPreview>{post.content}</PostPreview>
               <MetaRow>
