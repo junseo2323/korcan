@@ -51,19 +51,53 @@ const KakaoButton = styled.button`
   }
 `
 
-export default function LoginPage() {
-    return (
-        <Container>
-            <Logo>KorCan</Logo>
-            <Description>
-                캐나다 한인들을 위한<br />
-                필수 유틸리티 & 커뮤니티
-            </Description>
+const GoogleButton = styled.button`
+  background-color: #FFFFFF;
+  color: #757575;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 1rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  width: 100%;
+  max-width: 320px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: background-color 0.2s;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 
-            <KakaoButton onClick={() => signIn('kakao', { callbackUrl: '/' })}>
-                <MessageCircle size={20} fill="black" />
-                카카오로 시작하기
-            </KakaoButton>
-        </Container>
-    )
+  &:hover {
+    background-color: #f9f9f9;
+  }
+`
+
+export default function LoginPage() {
+  return (
+    <Container>
+      <Logo>KorCan</Logo>
+      <Description>
+        캐나다 한인들을 위한<br />
+        필수 유틸리티 & 커뮤니티
+      </Description>
+
+      <GoogleButton onClick={() => signIn('google', { callbackUrl: '/' })}>
+        <img src="/google-logo.png" alt="Google" style={{ width: 20, height: 20 }} onError={(e) => {
+          // Fallback to text icon or SVGs if image fails
+          e.currentTarget.style.display = 'none'
+        }} />
+        {/* Fallback SVG if image invalid */}
+        <span style={{ marginLeft: '0.5rem' }}>구글로 시작하기</span>
+      </GoogleButton>
+
+      <div style={{ height: '0.75rem' }} />
+
+      <KakaoButton onClick={() => signIn('kakao', { callbackUrl: '/' })}>
+        <MessageCircle size={20} fill="black" />
+        카카오로 시작하기
+      </KakaoButton>
+    </Container>
+  )
 }
