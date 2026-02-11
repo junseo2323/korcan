@@ -69,13 +69,6 @@ jobs:
             # Pull the latest image
             sudo docker compose -f docker-compose.prod.yml pull
 
-            # Update .env with Google Credentials
-            # Remove old entries to prevent duplicates
-            sed -i '/GOOGLE_CLIENT_/d' .env
-            echo "GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}" >> .env
-            echo "GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}" >> .env
-
-
             # Update the running container
             sudo docker compose -f docker-compose.prod.yml up -d
 
