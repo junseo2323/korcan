@@ -7,6 +7,8 @@ services:
     restart: always
     env_file:
       - .env
+    volumes:
+      - ./db_data:/app/db
     environment:
       - NODE_ENV=production
     networks:
