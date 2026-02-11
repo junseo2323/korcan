@@ -48,21 +48,15 @@ export async function PUT(req: Request) {
     }
 
     const body = await req.json()
-    const { name, email, phoneNumber, birthDate, countryCode } = body
+    const { name, email, phoneNumber, birthDate, countryCode, region } = body
 
-    if (!name || !email || !phoneNumber || !birthDate) {
+    if (!name || !email || !phoneNumber || !birthDate || !region) {
         return NextResponse.json({ error: 'All fields are required' }, { status: 400 })
     }
 
-    // Basic Server-side Validation
-    const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!EMAIL_REGEX.test(email)) {
-        return NextResponse.json({ error: 'Invalid email format' }, { status: 400 })
-    }
+    // ... (rest of validation)
 
-    // Phone validation (relaxed check to allow +1 and +82 with some format flexibility)
-    // We expect the frontend to send "Code Number" or just Number, but here we validate structure.
-    // For simplicity, we ensure it's not empty and has minimum length.
+    // ... phone number validation ...
     if (phoneNumber.length < 10) {
         return NextResponse.json({ error: 'Invalid phone number' }, { status: 400 })
     }
@@ -75,6 +69,7 @@ export async function PUT(req: Request) {
                 email, // Update email if provided
                 phoneNumber, // formatting handled by frontend (e.g. "+82 010-1234-5678")
                 birthDate,
+                region,
                 isRegistered: true
             }
         })

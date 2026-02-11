@@ -96,7 +96,8 @@ export default function RegisterPage() {
     email: '',
     countryCode: '+1',
     phoneNumber: '',
-    birthDate: ''
+    birthDate: '',
+    region: ''
   })
 
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -123,6 +124,9 @@ export default function RegisterPage() {
         break
       case 'birthDate':
         if (!value) error = '생년월일을 선택해주세요.'
+        break
+      case 'region':
+        if (!value) error = '지역을 선택해주세요.'
         break
     }
     return error
@@ -217,7 +221,7 @@ export default function RegisterPage() {
   }
 
   const isValid = !Object.values(errors).some(e => e) &&
-    formData.name && formData.email && formData.phoneNumber && formData.birthDate
+    formData.name && formData.email && formData.phoneNumber && formData.birthDate && formData.region
 
   return (
     <Container>
@@ -278,6 +282,32 @@ export default function RegisterPage() {
           $hasError={!!errors.birthDate}
         />
         {errors.birthDate && <ErrorText>{errors.birthDate}</ErrorText>}
+      </InputGroup>
+
+      <InputGroup>
+        <Label>지역 (Region)</Label>
+        <Select
+          name="region"
+          value={formData.region}
+          onChange={handleChange}
+          style={{ width: '100%' }}
+        >
+          <option value="" disabled>지역을 선택해주세요</option>
+          <option value="Toronto">토론토 (Toronto)</option>
+          <option value="Vancouver">밴쿠버 (Vancouver)</option>
+          <option value="Montreal">몬트리올 (Montreal)</option>
+          <option value="Quebec">퀘벡 (Quebec)</option>
+          <option value="Calgary">캘거리 (Calgary)</option>
+          <option value="Ottawa">오타와 (Ottawa)</option>
+          <option value="Edmonton">에드먼턴 (Edmonton)</option>
+          <option value="Winnipeg">위니펙 (Winnipeg)</option>
+          <option value="Halifax">할리팩스 (Halifax)</option>
+          <option value="Other">그 외 (Other)</option>
+        </Select>
+        <ErrorText style={{ color: '#666', marginTop: '0.5rem' }}>
+          * 목록에 없는 경우 가장 가까운 선호 지역을 선택하셔도 됩니다.
+        </ErrorText>
+        {errors.region && <ErrorText>{errors.region}</ErrorText>}
       </InputGroup>
 
       <Button onClick={handleSubmit} disabled={!isValid || loading}>

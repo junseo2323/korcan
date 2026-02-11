@@ -1,5 +1,5 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
   binaryTargets = ["native", "linux-musl-openssl-3.0.x", "debian-openssl-3.0.x"]
 }
 
@@ -17,78 +17,89 @@ model User {
   image         String?
   kakaoId       String?   @unique
   phoneNumber   String?
-  birthDate     String?   // YYYY-MM-DD
+  birthDate     String? // YYYY-MM-DD
   isRegistered  Boolean   @default(false)
-  
-  accounts      Account[]
-  sessions      Session[]
-  
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  region        String? // [NEW] MVP 2
 
-  expenses      Expense[]
+  accounts Account[]
+  sessions Session[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  expenses       Expense[]
   recurringRules RecurringRule[]
-  todos         Todo[]
-  posts         Post[]
-  comments      Comment[]
-  products      Product[]
-  likes         Like[]
-  
-  sentMessages     Message[]  @relation("SentMessages")
-  chatRooms        ChatRoom[] 
-  
-  friends          Friend[]   @relation("UserFriends")
-  friendOf         Friend[]   @relation("FriendUsers")
+  todos          Todo[]
+  posts          Post[]
+  comments       Comment[]
+  products       Product[]
+  likes          Like[]
+
+  sentMessages Message[]  @relation("SentMessages")
+  chatRooms    ChatRoom[]
+
+  friends  Friend[] @relation("UserFriends")
+  friendOf Friend[] @relation("FriendUsers")
+
+  // [NEW] MVP 2
+  organizedMeetups    Meetup[] @relation("OrganizedMeetups")
+  participatedMeetups Meetup[] @relation("MeetupParticipants")
 }
 
 model Friend {
-  id        String   @id @default(cuid())
-  userId    String
-  friendId  String
-  
-  user      User     @relation("UserFriends", fields: [userId], references: [id], onDelete: Cascade)
-  friend    User     @relation("FriendUsers", fields: [friendId], references: [id], onDelete: Cascade)
-  
+  id       String @id @default(cuid())
+  userId   String
+  friendId String
+
+  user   User @relation("UserFriends", fields: [userId], references: [id], onDelete: Cascade)
+  friend User @relation("FriendUsers", fields: [friendId], references: [id], onDelete: Cascade)
+
   createdAt DateTime @default(now())
 
   @@unique([userId, friendId])
 }
 
 model ChatRoom {
-  id            String    @id @default(cuid())
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  lastMessageAt DateTime  @default(now())
-  
-  users         User[]
-  messages      Message[]
+  id            String   @id @default(cuid())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  lastMessageAt DateTime @default(now())
+
+  // [NEW] MVP 2
+  name     String?
+  type     String  @default("DIRECT") // DIRECT, GROUP
+  meetupId String? @unique
+  meetup   Meetup? @relation(fields: [meetupId], references: [id])
+
+  users    User[]
+  messages Message[]
 }
 
 model Message {
-  id         String   @id @default(cuid())
-  content    String
-  createdAt  DateTime @default(now())
-  
-  senderId   String
-  sender     User     @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
-  
+  id        String   @id @default(cuid())
+  content   String
+  createdAt DateTime @default(now())
+
+  senderId String
+  sender   User   @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+
   chatRoomId String
   chatRoom   ChatRoom @relation(fields: [chatRoomId], references: [id], onDelete: Cascade)
 }
 
 model Account {
-  id                 String  @id @default(cuid())
-  userId             String
-  type               String
-  provider           String
-  providerAccountId  String
-  refresh_token      String?
-  access_token       String?
-  expires_at         Int?
-  token_type         String?
-  scope              String?
-  id_token           String?
-  session_state      String?
+  id                       String  @id @default(cuid())
+  userId                   String
+  type                     String
+  provider                 String
+  providerAccountId        String
+  refresh_token            String?
+  access_token             String?
+  expires_at               Int?
+  token_type               String?
+  scope                    String?
+  id_token                 String?
+  session_state            String?
   refresh_token_expires_in Int?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -114,31 +125,31 @@ model VerificationToken {
 
 // 2. Expenses
 model Expense {
-  id        String   @id @default(cuid())
-  amount    Float
-  currency  String   // 'CAD' | 'KRW'
-  category  String
-  date      DateTime
-  note      String?
-  
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  id       String   @id @default(cuid())
+  amount   Float
+  currency String // 'CAD' | 'KRW'
+  category String
+  date     DateTime
+  note     String?
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   createdAt DateTime @default(now())
 }
 
 model RecurringRule {
-  id        String   @id @default(cuid())
+  id        String  @id @default(cuid())
   amount    Float
-  currency  String   // 'CAD' | 'KRW'
+  currency  String // 'CAD' | 'KRW'
   category  String
   note      String?
-  frequency String   // 'monthly' | 'weekly'
-  day       Int      // 1-31 or 0-6
-  
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  frequency String // 'monthly' | 'weekly'
+  day       Int // 1-31 or 0-6
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -149,57 +160,62 @@ model Todo {
   text        String
   isCompleted Boolean  @default(false)
   date        DateTime // YYYY-MM-DD stored as Date
-  tagColor    String?  // Hex code
-  
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  createdAt   DateTime @default(now())
+  tagColor    String? // Hex code
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
 }
 
 // 4. Community Board
 model Post {
-  id        String    @id @default(cuid())
-  title     String
-  content   String
-  category  String    @default("일반")
-  views     Int       @default(0)
-  
-  userId    String
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  comments  Comment[]
-  likes     Like[]
-  
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id       String @id @default(cuid())
+  title    String
+  content  String
+  category String @default("일반")
+  views    Int    @default(0)
+
+  // [NEW] MVP 2
+  region   String?
+  meetupId String?
+  meetup   Meetup? @relation(fields: [meetupId], references: [id])
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  comments Comment[]
+  likes    Like[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Comment {
-  id        String   @id @default(cuid())
-  content   String
-  
-  postId    String
-  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
-  
-  userId    String?
-  user      User?    @relation(fields: [userId], references: [id])
+  id      String @id @default(cuid())
+  content String
+
+  postId String
+  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  userId     String?
+  user       User?   @relation(fields: [userId], references: [id])
   authorName String? // For anonymous or quick display
 
   createdAt DateTime @default(now())
 }
 
 model Like {
-  id        String   @id @default(cuid())
-  
-  postId    String?
-  post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
-  
+  id String @id @default(cuid())
+
+  postId String?
+  post   Post?   @relation(fields: [postId], references: [id], onDelete: Cascade)
+
   productId String?
   product   Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
-  
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, postId])
   @@unique([userId, productId])
@@ -207,19 +223,42 @@ model Like {
 
 // 5. Marketplace
 model Product {
-  id          String   @id @default(cuid())
+  id          String  @id @default(cuid())
   title       String
   price       Float
   description String
   category    String
   imageUrl    String?
-  status      String   @default("SELLING") // SELLING, RESERVED, SOLD
-  
-  sellerId    String
-  seller      User     @relation(fields: [sellerId], references: [id], onDelete: Cascade)
-  
-  likes       Like[]
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  status      String  @default("SELLING") // SELLING, RESERVED, SOLD
+
+  sellerId String
+  seller   User   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+
+  likes Like[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// [NEW] MVP 2 Meetup Model
+model Meetup {
+  id             String   @id @default(cuid())
+  title          String
+  description    String
+  date           DateTime
+  maxMembers     Int
+  currentMembers Int      @default(1)
+  status         String   @default("OPEN") // OPEN, CLOSED
+  region         String
+
+  organizerId String
+  organizer   User   @relation("OrganizedMeetups", fields: [organizerId], references: [id], onDelete: Cascade)
+
+  participants User[] @relation("MeetupParticipants")
+
+  chatRoom ChatRoom?
+  posts    Post[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

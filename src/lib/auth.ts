@@ -1,4 +1,5 @@
 import KakaoProvider from "next-auth/providers/kakao"
+import GoogleProvider from "next-auth/providers/google"
 import { PrismaAdapter } from "@next-auth/prisma-adapter"
 import { prisma } from "@/lib/prisma"
 import { NextAuthOptions } from "next-auth"
@@ -6,6 +7,10 @@ import { NextAuthOptions } from "next-auth"
 export const authOptions: NextAuthOptions = {
     adapter: PrismaAdapter(prisma),
     providers: [
+        GoogleProvider({
+            clientId: process.env.GOOGLE_CLIENT_ID || "",
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
+        }),
         KakaoProvider({
             clientId: process.env.KAKAO_CLIENT_ID!,
             clientSecret: process.env.KAKAO_CLIENT_SECRET!,
@@ -20,6 +25,7 @@ export const authOptions: NextAuthOptions = {
             if (user) {
                 token.id = user.id
                 token.isRegistered = (user as any).isRegistered
+                token.region = (user as any).region
             }
 
             // Refetch user data on update (e.g. after registration)
@@ -31,6 +37,7 @@ export const authOptions: NextAuthOptions = {
                     token.name = freshUser.name
                     token.email = freshUser.email
                     token.isRegistered = freshUser.isRegistered
+                    token.region = freshUser.region
                 }
             }
 
@@ -40,6 +47,7 @@ export const authOptions: NextAuthOptions = {
             if (session?.user) {
                 session.user.id = token.id
                 session.user.isRegistered = token.isRegistered
+                session.user.region = token.region
                 session.user.name = token.name
                 session.user.email = token.email
             }

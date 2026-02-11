@@ -276,15 +276,19 @@ export default function ChatPopup() {
         }
     }
 
-    const getPartnerName = (users: any[]) => {
-        const partner = users.find((u: any) => u.id !== session?.user?.id)
+    const getChatName = (chat: any) => {
+        if (chat.type === 'GROUP') return chat.name || 'Group Chat'
+        const partner = chat.users.find((u: any) => u.id !== session?.user?.id)
         return partner ? partner.name : 'Unknown'
     }
 
-    const getPartnerImage = (users: any[]) => {
-        const partner = users.find((u: any) => u.id !== session?.user?.id)
+    const getChatImage = (chat: any) => {
+        if (chat.type === 'GROUP') return null // Will handle with Icon
+        const partner = chat.users.find((u: any) => u.id !== session?.user?.id)
         return partner ? partner.image : null
     }
+
+    const activeChat = chats.find(c => c.id === activeRoomId)
 
     if (!session) return null
 
@@ -295,7 +299,14 @@ export default function ChatPopup() {
                     {activeRoomId ? (
                         <>
                             <IconButton onClick={closeChat}><ChevronLeft size={20} /></IconButton>
-                            <span>채팅</span>
+                            <span style={{ maxWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {activeChat ? getChatName(activeChat) : '채팅'}
+                            </span>
+                            {activeChat?.type === 'GROUP' && (
+                                <span style={{ fontSize: '0.8rem', fontWeight: 400, marginLeft: '4px' }}>
+                                    ({activeChat.users.length})
+                                </span>
+                            )}
                         </>
                     ) : (
                         <>
@@ -311,9 +322,16 @@ export default function ChatPopup() {
                 <ChatRoomContainer>
                     <MessageList ref={scrollRef}>
                         {messages.map((msg: any) => (
-                            <MessageBubble key={msg.id} $isMine={msg.senderId === session.user.id}>
-                                {msg.content}
-                            </MessageBubble>
+                            <div key={msg.id} style={{ display: 'flex', flexDirection: 'column', alignItems: msg.senderId === session.user.id ? 'flex-end' : 'flex-start' }}>
+                                {activeChat?.type === 'GROUP' && msg.senderId !== session.user.id && (
+                                    <span style={{ fontSize: '0.75rem', color: '#666', marginBottom: '2px', marginLeft: '4px' }}>
+                                        {msg.sender?.name || 'Unknown'}
+                                    </span>
+                                )}
+                                <MessageBubble $isMine={msg.senderId === session.user.id}>
+                                    {msg.content}
+                                </MessageBubble>
+                            </div>
                         ))}
                     </MessageList>
                     <ChatInputArea>
@@ -357,55 +375,25 @@ export default function ChatPopup() {
                                 </AddFriendInput>
                                 {friends.map((f: any) => (
                                     <ListItem key={f.id} onClick={() => {
-                                        // Start chat with friend
-                                        // We need to call create chat API
-                                        // Or simply switch tab if chat exists?
-                                        // For simplicity, just use context helper which does create/get
-                                        // But we need accessing context function inside loop.. it's fine.
-                                        // However, openChatWithUser is async.
-                                        const { openChatWithUser } = useChat() // Wait, hooks rules. I useHook at top.
-                                        // Re-use logic
+                                        // Start chat logic...
                                     }}>
-                                        {/* Actually I cannot call useChat inside loop. I already have it at top. */}
-                                        <div style={{ display: 'flex', width: '100%', alignItems: 'center', gap: '0.75rem' }} onClick={() => {
-                                            // This creates a closure issue if not careful, but openChatWithUser is stable.
-                                            // But wait, I cannot call hook in onClick. I can call function.
-                                            // Yes, openChatWithUser is a function returned by useChat.
-                                        }}>
-                                            {/* Better to separate ListItem logic or just inline button */}
-                                        </div>
-                                        <Avatar src={f.image || 'https://via.placeholder.com/40'} />
+                                        <Avatar src={f.image || '/placeholder-user.png'} />
                                         <Name>{f.name}</Name>
                                         <button
                                             style={{ marginLeft: 'auto', padding: '4px 8px', fontSize: '0.8rem', background: '#eee', border: 'none', borderRadius: 4, cursor: 'pointer' }}
-                                            onClick={(e) => {
+                                            onClick={async (e) => {
                                                 e.stopPropagation()
-                                                // Call global function
-                                                // I need to enable "openChatWithUser" here.
-                                                // The hook is called at top level: const { openChatWithUser } = useChat()
-                                                // So I can use it here.
-                                                openChatRoom(f.id) // WRONG. Friend ID is user ID. Chat ID is different.
-                                                // I need openChatWithUser(f.id)
-                                                // But openChatWithUser is defined in useChat.
-                                                // Let's use the one from props or context.
-                                                // Wait, I destructured it at line 147.
-                                                // So I can use it.
-                                                const start = async () => {
-                                                    try {
-                                                        // Manually fetch here or use the context function
-                                                        // openChatWithUser(f.id)
-                                                        const res = await fetch('/api/chats', {
-                                                            method: 'POST',
-                                                            headers: { 'Content-Type': 'application/json' },
-                                                            body: JSON.stringify({ targetUserId: f.id })
-                                                        })
-                                                        if (res.ok) {
-                                                            const room = await res.json()
-                                                            openChatRoom(room.id)
-                                                        }
-                                                    } catch { }
-                                                }
-                                                start()
+                                                try {
+                                                    const res = await fetch('/api/chats', {
+                                                        method: 'POST',
+                                                        headers: { 'Content-Type': 'application/json' },
+                                                        body: JSON.stringify({ targetUserId: f.friendId === session.user.id ? f.userId : f.friendId }) // Check logic
+                                                    })
+                                                    if (res.ok) {
+                                                        const room = await res.json()
+                                                        openChatRoom(room.id)
+                                                    }
+                                                } catch { }
                                             }}
                                         >
                                             대화하기
@@ -418,9 +406,15 @@ export default function ChatPopup() {
                         {activeTab === 'chats' && (
                             chats.map((chat: any) => (
                                 <ListItem key={chat.id} onClick={() => openChatRoom(chat.id)}>
-                                    <Avatar src={getPartnerImage(chat.users) || 'https://via.placeholder.com/40'} />
+                                    {chat.type === 'GROUP' ? (
+                                        <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#e0e7ff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4f46e5' }}>
+                                            <MessageCircle size={20} />
+                                        </div>
+                                    ) : (
+                                        <Avatar src={getChatImage(chat) || '/placeholder-user.png'} />
+                                    )}
                                     <Info>
-                                        <Name>{getPartnerName(chat.users)}</Name>
+                                        <Name>{getChatName(chat)}</Name>
                                         <SubInfo>{chat.messages[0]?.content || '대화가 없습니다.'}</SubInfo>
                                     </Info>
                                     <SubInfo style={{ marginLeft: 'auto', fontSize: '0.7rem' }}>

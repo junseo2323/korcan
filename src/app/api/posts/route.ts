@@ -6,8 +6,17 @@ import { authOptions } from '@/lib/auth'
 export async function GET(req: Request) {
     const { searchParams } = new URL(req.url)
     const category = searchParams.get('category')
+    const region = searchParams.get('region')
 
-    const where = category && category !== 'All' ? { category } : {}
+    const where: any = {}
+    if (category && category !== 'All') where.category = category
+    if (region && region !== 'All') {
+        if (region === 'Global') {
+            where.region = null
+        } else {
+            where.region = region
+        }
+    }
 
     const posts = await prisma.post.findMany({
         where,
@@ -18,7 +27,8 @@ export async function GET(req: Request) {
             },
             _count: {
                 select: { comments: true, likes: true }
-            }
+            },
+            meetup: true // Include meetup details
         }
     })
 
@@ -32,20 +42,73 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json()
-    const { title, content, category } = body
+    const { title, content, category, region, meetupData } = body
 
     if (!title || !content) {
         return NextResponse.json({ error: 'Title and content are required' }, { status: 400 })
     }
 
-    const post = await prisma.post.create({
-        data: {
-            title,
-            content,
-            category: category || '일반',
-            userId: session.user.id
-        }
-    })
+    try {
+        if (category === '모임' && meetupData) {
+            // Transaction for Meetup, ChatRoom, Post
+            const result = await prisma.$transaction(async (tx) => {
+                // 1. Create Meetup
+                const meetup = await tx.meetup.create({
+                    data: {
+                        title,
+                        description: content,
+                        date: new Date(meetupData.date),
+                        maxMembers: parseInt(meetupData.maxMembers),
+                        region: region === 'Global' ? 'Global' : (region || 'Unknown'),
+                        organizerId: session.user.id,
+                        participants: {
+                            connect: { id: session.user.id }
+                        }
+                    }
+                })
 
-    return NextResponse.json(post)
+                // 2. Create ChatRoom
+                const chatRoom = await tx.chatRoom.create({
+                    data: {
+                        type: 'GROUP',
+                        name: title,
+                        meetupId: meetup.id,
+                        users: {
+                            connect: { id: session.user.id }
+                        }
+                    }
+                })
+
+                // 3. Create Post linked to Meetup
+                const post = await tx.post.create({
+                    data: {
+                        title,
+                        content,
+                        category,
+                        region: region === 'Global' ? null : region,
+                        userId: session.user.id,
+                        meetupId: meetup.id
+                    }
+                })
+
+                return post
+            })
+            return NextResponse.json(result)
+        } else {
+            // Normal Post
+            const post = await prisma.post.create({
+                data: {
+                    title,
+                    content,
+                    category: category || '일반',
+                    region: region === 'Global' ? null : region,
+                    userId: session.user.id
+                }
+            })
+            return NextResponse.json(post)
+        }
+    } catch (error) {
+        console.error(error)
+        return NextResponse.json({ error: 'Failed to create post' }, { status: 500 })
+    }
 }

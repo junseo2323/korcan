@@ -8,6 +8,7 @@ declare module "next-auth" {
         user: {
             id: string
             isRegistered: boolean
+            region?: string | null
         } & DefaultSession["user"]
     }
 }

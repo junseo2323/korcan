@@ -19,23 +19,39 @@ export interface Post {
         comments: number
         likes: number
     }
+    meetup?: {
+        id: string
+        date: string
+        maxMembers: number
+        currentMembers: number
+        status: string
+        region: string
+    } | null
 }
 
 interface PostContextType {
     posts: Post[]
     refreshPosts: () => void
-    addPost: (title: string, content: string, category?: string) => Promise<void>
+    addPost: (title: string, content: string, category?: string, region?: string, meetupData?: any) => Promise<void>
     updatePost: (id: string, updates: Partial<Post>) => void
+    selectedRegion: string
+    setSelectedRegion: (region: string) => void
 }
 
 const PostContext = createContext<PostContextType | undefined>(undefined)
 
 export function PostProvider({ children }: { children: React.ReactNode }) {
     const [posts, setPosts] = useState<Post[]>([])
+    const [selectedRegion, setSelectedRegion] = useState<string>('All')
 
-    const fetchPosts = async () => {
+    const fetchPosts = async (region?: string) => {
         try {
-            const res = await fetch('/api/posts')
+            const url = new URL('/api/posts', window.location.href)
+            if (region && region !== 'All') {
+                url.searchParams.set('region', region)
+            }
+
+            const res = await fetch(url.toString())
             if (res.ok) {
                 const data = await res.json()
                 setPosts(data)
@@ -46,22 +62,22 @@ export function PostProvider({ children }: { children: React.ReactNode }) {
     }
 
     useEffect(() => {
-        fetchPosts()
-    }, [])
+        fetchPosts(selectedRegion)
+    }, [selectedRegion])
 
     const refreshPosts = () => {
-        fetchPosts()
+        fetchPosts(selectedRegion)
     }
 
-    const addPost = async (title: string, content: string, category: string = '일반') => {
+    const addPost = async (title: string, content: string, category: string = '일반', region?: string, meetupData?: any) => {
         try {
             const res = await fetch('/api/posts', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title, content, category })
+                body: JSON.stringify({ title, content, category, region, meetupData })
             })
             if (res.ok) {
-                fetchPosts()
+                refreshPosts()
             } else {
                 throw new Error('Failed to create post')
             }
@@ -78,7 +94,7 @@ export function PostProvider({ children }: { children: React.ReactNode }) {
     }
 
     return (
-        <PostContext.Provider value={{ posts, refreshPosts, addPost, updatePost }}>
+        <PostContext.Provider value={{ posts, refreshPosts, addPost, updatePost, selectedRegion, setSelectedRegion }}>
             {children}
         </PostContext.Provider>
     )

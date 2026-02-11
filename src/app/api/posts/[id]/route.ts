@@ -32,6 +32,17 @@ export async function GET(
             likes: true, // simplified, or we can check if user liked it
             _count: {
                 select: { likes: true, comments: true }
+            },
+            meetup: {
+                include: {
+                    participants: {
+                        select: { id: true, name: true, image: true }
+                    },
+                    chatRoom: {
+                        select: { id: true }
+                    },
+
+                }
             }
         }
     })

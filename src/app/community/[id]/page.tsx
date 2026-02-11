@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import styled from 'styled-components'
 import { useParams, useRouter } from 'next/navigation'
 import { usePosts } from '@/contexts/PostContext'
+import { useChat } from '@/contexts/ChatContext'
 import { ChevronLeft, ThumbsUp, MessageCircle, Send } from 'lucide-react'
 
 const Container = styled.div`
@@ -149,6 +150,7 @@ export default function PostDetailPage() {
   const router = useRouter()
   const { data: session } = useSession()
   const { updatePost } = usePosts()
+  const { openChatRoom } = useChat()
 
   const [post, setPost] = useState<any>(null)
   const [comment, setComment] = useState('')
@@ -258,6 +260,127 @@ export default function PostDetailPage() {
           <span>{new Date(post.createdAt).toLocaleDateString()}</span>
           <span>조회 {post.views}</span>
         </MetaInfo>
+
+        {post.category === '모임' && post.meetup && (
+          <div style={{
+            backgroundColor: '#f8fafc',
+            padding: '1.5rem',
+            borderRadius: '12px',
+            marginBottom: '2rem',
+            border: '1px solid #e2e8f0'
+          }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '1rem', color: '#1e293b' }}>📅 모임 정보</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+              <div>
+                <span style={{ fontSize: '0.9rem', color: '#64748b', display: 'block', marginBottom: '0.25rem' }}>날짜</span>
+                <span style={{ fontSize: '1rem', fontWeight: 600, color: '#334155' }}>
+                  {new Date(post.meetup.date).toLocaleString()}
+                </span>
+              </div>
+              <div>
+                <span style={{ fontSize: '0.9rem', color: '#64748b', display: 'block', marginBottom: '0.25rem' }}>장소</span>
+                <span style={{ fontSize: '1rem', fontWeight: 600, color: '#334155' }}>{post.meetup.region}</span>
+              </div>
+              <div>
+                <span style={{ fontSize: '0.9rem', color: '#64748b', display: 'block', marginBottom: '0.25rem' }}>인원</span>
+                <span style={{ fontSize: '1rem', fontWeight: 600, color: '#334155' }}>
+                  {post.meetup.currentMembers} / {post.meetup.maxMembers}명
+                </span>
+              </div>
+              <div>
+                <span style={{ fontSize: '0.9rem', color: '#64748b', display: 'block', marginBottom: '0.25rem' }}>상태</span>
+                <span style={{
+                  fontSize: '0.9rem', fontWeight: 700,
+                  color: post.meetup.status === 'OPEN' ? '#2563eb' : '#dc2626',
+                  backgroundColor: post.meetup.status === 'OPEN' ? '#dbeafe' : '#fee2e2',
+                  padding: '2px 8px', borderRadius: '4px'
+                }}>
+                  {post.meetup.status === 'OPEN' ? '모집중' : '마감'}
+                </span>
+              </div>
+            </div>
+
+            {session && (
+              <button
+                onClick={async () => {
+                  if (!session) return
+                  const isJoined = post.meetup.participants.some((p: any) => p.id === session.user.id)
+                  const method = isJoined ? 'DELETE' : 'POST'
+
+                  try {
+                    const res = await fetch(`/api/meetups/${post.meetup.id}/join`, { method })
+                    if (res.ok) {
+                      showToast(isJoined ? '모임에서 나갔습니다.' : '모임에 참여했습니다.')
+                      fetchPostDetail()
+                    } else {
+                      const err = await res.json()
+                      alert(err.error || '요청 실패')
+                    }
+                  } catch (e) {
+                    console.error(e)
+                    alert('오류가 발생했습니다.')
+                  }
+                }}
+                disabled={post.meetup.status === 'CLOSED' && !post.meetup.participants.some((p: any) => p.id === session?.user?.id)}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem',
+                  borderRadius: '8px',
+                  border: 'none',
+                  backgroundColor: post.meetup.participants.some((p: any) => p.id === session?.user?.id) ? '#ef4444' : '#3b82f6',
+                  color: 'white',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  opacity: (post.meetup.status === 'CLOSED' && !post.meetup.participants.some((p: any) => p.id === session?.user?.id)) ? 0.5 : 1
+                }}
+              >
+                {post.meetup.participants.some((p: any) => p.id === session?.user?.id) ? '모임 나가기' : '참여하기'}
+              </button>
+            )}
+
+            {session && post.meetup.participants.some((p: any) => p.id === session?.user?.id) && post.meetup.chatRoom && (
+              <button
+                onClick={() => {
+                  if (post.meetup.chatRoom.id) {
+                    openChatRoom(post.meetup.chatRoom.id)
+                  }
+                }}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem',
+                  borderRadius: '8px',
+                  border: '1px solid #3b82f6',
+                  backgroundColor: 'white',
+                  color: '#3b82f6',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem',
+                  marginTop: '0.5rem'
+                }}
+              >
+                <MessageCircle size={18} />
+                채팅방 입장
+              </button>
+            )}
+
+            {/* Participants list preview */}
+            <div style={{ marginTop: '1.5rem' }}>
+              <span style={{ fontSize: '0.9rem', color: '#64748b', display: 'block', marginBottom: '0.5rem' }}>참여자</span>
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                {post.meetup.participants.map((p: any) => (
+                  <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: '4px', backgroundColor: 'white', padding: '4px 8px', borderRadius: '100px', border: '1px solid #e2e8f0' }}>
+                    <img src={p.image || '/placeholder-user.png'} style={{ width: '20px', height: '20px', borderRadius: '50%' }} />
+                    <span style={{ fontSize: '0.8rem' }}>{p.name}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
         <BodyText>{post.content}</BodyText>
 
         <ActionRow>

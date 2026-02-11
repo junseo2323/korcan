@@ -4,7 +4,9 @@ import React, { useState, useEffect } from 'react'
 import styled from 'styled-components'
 import { useRouter } from 'next/navigation'
 import { usePosts } from '@/contexts/PostContext'
+import { useSession } from 'next-auth/react'
 import { Plus, MessageCircle, ThumbsUp } from 'lucide-react'
+import MeetupCard from '@/components/MeetupCard'
 
 const Container = styled.div`
   display: flex;
@@ -108,9 +110,20 @@ const IconText = styled.div`
 
 export default function CommunityPage() {
   const router = useRouter()
-  const { posts } = usePosts()
+  const { posts, selectedRegion, setSelectedRegion } = usePosts()
+  const { data: session } = useSession()
   const [selectedCategory, setSelectedCategory] = useState('All')
   const [categories, setCategories] = useState<string[]>(['All', '일반', '질문', '정보', '잡담'])
+
+  // Fetch User Region to set default
+  useEffect(() => {
+    if (session?.user?.region) {
+      // Only set if current is All (initial load)
+      if (selectedRegion === 'All') {
+        setSelectedRegion(session.user.region)
+      }
+    }
+  }, [session, selectedRegion, setSelectedRegion])
 
   useEffect(() => {
     fetch('/api/posts/categories')
@@ -132,10 +145,38 @@ export default function CommunityPage() {
     <Container>
       <Header>
         <Title>자유게시판</Title>
-        <WriteButton onClick={() => router.push('/community/write')}>
-          <Plus size={18} />
-          글쓰기
-        </WriteButton>
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          <select
+            value={selectedRegion}
+            onChange={(e) => setSelectedRegion(e.target.value)}
+            style={{
+              padding: '0.5rem',
+              borderRadius: '8px',
+              border: '1px solid #e5e7eb',
+              fontSize: '0.9rem'
+            }}
+          >
+            <option value="All">전체 (All Regions)</option>
+            {/* Global? Or just treat All as Global + Regions? */}
+            {/* Wait, user said "Canada Board" is global. */}
+            {/* Maybe we need a specific 'Global' option explicitly? */}
+            <option value="Global">캐나다 전체 (Global)</option>
+            <option value="Toronto">토론토</option>
+            <option value="Vancouver">밴쿠버</option>
+            <option value="Montreal">몬트리올</option>
+            <option value="Quebec">퀘벡</option>
+            <option value="Calgary">캘거리</option>
+            <option value="Ottawa">오타와</option>
+            <option value="Edmonton">에드먼턴</option>
+            <option value="Winnipeg">위니펙</option>
+            <option value="Halifax">할리팩스</option>
+            <option value="Other">그 외</option>
+          </select>
+          <WriteButton onClick={() => router.push('/community/write')}>
+            <Plus size={18} />
+            글쓰기
+          </WriteButton>
+        </div>
       </Header>
 
       <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', paddingBottom: '1rem', marginBottom: '1rem' }}>
@@ -168,33 +209,37 @@ export default function CommunityPage() {
           </div>
         ) : (
           filteredPosts.map(post => (
-            <PostCard key={post.id} onClick={() => router.push(`/community/${post.id}`)}>
-              <div style={{ marginBottom: '0.5rem' }}>
-                <span style={{
-                  fontSize: '0.75rem',
-                  color: '#3b82f6',
-                  backgroundColor: '#eff6ff',
-                  padding: '2px 8px',
-                  borderRadius: '10px',
-                  fontWeight: 600
-                }}>
-                  {post.category || '일반'}
-                </span>
-              </div>
-              <PostTitle>{post.title}</PostTitle>
-              <PostPreview>{post.content}</PostPreview>
-              <MetaRow>
-                <MetaLeft>
-                  <span>{post.user?.name || '익명'}</span>
-                  <span>·</span>
-                  <span>{new Date(post.createdAt).toLocaleDateString()}</span>
-                </MetaLeft>
-                <MetaRight>
-                  <IconText><ThumbsUp size={14} /> {post._count?.likes || 0}</IconText>
-                  <IconText><MessageCircle size={14} /> {post._count?.comments || 0}</IconText>
-                </MetaRight>
-              </MetaRow>
-            </PostCard>
+            post.category === '모임' && post.meetup ? (
+              <MeetupCard key={post.id} post={post} />
+            ) : (
+              <PostCard key={post.id} onClick={() => router.push(`/community/${post.id}`)}>
+                <div style={{ marginBottom: '0.5rem' }}>
+                  <span style={{
+                    fontSize: '0.75rem',
+                    color: '#3b82f6',
+                    backgroundColor: '#eff6ff',
+                    padding: '2px 8px',
+                    borderRadius: '10px',
+                    fontWeight: 600
+                  }}>
+                    {post.category || '일반'}
+                  </span>
+                </div>
+                <PostTitle>{post.title}</PostTitle>
+                <PostPreview>{post.content}</PostPreview>
+                <MetaRow>
+                  <MetaLeft>
+                    <span>{post.user?.name || '익명'}</span>
+                    <span>·</span>
+                    <span>{new Date(post.createdAt).toLocaleDateString()}</span>
+                  </MetaLeft>
+                  <MetaRight>
+                    <IconText><ThumbsUp size={14} /> {post._count?.likes || 0}</IconText>
+                    <IconText><MessageCircle size={14} /> {post._count?.comments || 0}</IconText>
+                  </MetaRight>
+                </MetaRow>
+              </PostCard>
+            )
           ))
         )}
       </PostList>

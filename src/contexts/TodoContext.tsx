@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import { useLocalStorage } from '@/hooks/useLocalStorage'
+import { v4 as uuidv4 } from 'uuid'
 
 export interface TodoItem {
     id: string
@@ -74,7 +75,7 @@ export function TodoProvider({ children }: { children: React.ReactNode }) {
     }, [])
 
     const addTodo = async (text: string, date: string, color: string = '#4F85F8') => {
-        const tempId = crypto.randomUUID()
+        const tempId = uuidv4()
         const newTodo: TodoItem = {
             id: tempId,
             text,

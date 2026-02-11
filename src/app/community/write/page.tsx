@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import styled from 'styled-components'
 import { useRouter } from 'next/navigation'
 import { usePosts } from '@/contexts/PostContext'
+import { useSession } from 'next-auth/react'
 import { ChevronLeft } from 'lucide-react'
 
 const Container = styled.div`
@@ -102,11 +103,24 @@ export default function WritePostPage() {
       .catch(console.error)
   }, [])
 
+  const { data: session } = useSession()
+  const [scope, setScope] = useState<'Local' | 'Global'>('Local')
+
+  // Meetup States
+  const [meetupDate, setMeetupDate] = useState('')
+  const [maxMembers, setMaxMembers] = useState('4')
+
   const handleSubmit = async () => {
     if (!title || !content) return
     setLoading(true)
     try {
-      await addPost(title, content, category)
+      // Determine region value
+      // If Global, pass 'Global' (API converts to null)
+      // If Local, pass user's region. If user has no region, maybe default to Global or error?
+      // Assuming user has region if they selected Local.
+      const regionValue = scope === 'Global' ? 'Global' : (session?.user?.region || 'Global')
+
+      await addPost(title, content, category, regionValue)
       router.back()
     } catch (e) {
       alert('글 작성에 실패했습니다.')
@@ -158,6 +172,71 @@ export default function WritePostPage() {
             }}
           />
         </div>
+
+        {/* Scope Selection */}
+        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
+          <button
+            onClick={() => setScope('Local')}
+            style={{
+              padding: '0.5rem 1rem',
+              borderRadius: '8px',
+              border: scope === 'Local' ? '1px solid #3b82f6' : '1px solid #e5e7eb',
+              backgroundColor: scope === 'Local' ? '#eff6ff' : 'white',
+              color: scope === 'Local' ? '#3b82f6' : '#6b7280',
+              fontWeight: 600,
+              fontSize: '0.9rem',
+              cursor: 'pointer'
+            }}
+          >
+            {session?.user?.region ? `${session.user.region} (내 지역)` : '내 지역'}
+          </button>
+          <button
+            onClick={() => setScope('Global')}
+            style={{
+              padding: '0.5rem 1rem',
+              borderRadius: '8px',
+              border: scope === 'Global' ? '1px solid #3b82f6' : '1px solid #e5e7eb',
+              backgroundColor: scope === 'Global' ? '#eff6ff' : 'white',
+              color: scope === 'Global' ? '#3b82f6' : '#6b7280',
+              fontWeight: 600,
+              fontSize: '0.9rem',
+              cursor: 'pointer'
+            }}
+          >
+            캐나다 전체 (Global)
+          </button>
+        </div>
+
+
+
+        {category === '모임' && (
+          <div style={{ display: 'flex', gap: '1rem', marginBottom: '0.5rem' }}>
+            <div style={{ flex: 1 }}>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: '#666' }}>
+                모임 날짜
+              </label>
+              <Input
+                type="datetime-local"
+                value={meetupDate}
+                onChange={(e) => setMeetupDate(e.target.value)}
+                style={{ width: '100%', fontSize: '1rem' }}
+              />
+            </div>
+            <div style={{ width: '100px' }}>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: '#666' }}>
+                최대 인원
+              </label>
+              <Input
+                type="number"
+                min="2"
+                value={maxMembers}
+                onChange={(e) => setMaxMembers(e.target.value)}
+                style={{ width: '100%', fontSize: '1rem' }}
+              />
+            </div>
+          </div>
+        )}
+
         <Input
           placeholder="제목"
           value={title}
@@ -172,6 +251,6 @@ export default function WritePostPage() {
           {loading ? '저장 중...' : '완료'}
         </SubmitButton>
       </Form>
-    </Container>
+    </Container >
   )
 }

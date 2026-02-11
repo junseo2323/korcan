@@ -1,6 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useEffect } from 'react'
+import { v4 as uuidv4 } from 'uuid'
 
 export interface Expense {
     id: string
@@ -71,7 +72,7 @@ export function ExpenseProvider({ children }: { children: React.ReactNode }) {
     }, [])
 
     const addExpense = async (expense: Omit<Expense, 'id'>) => {
-        const tempId = crypto.randomUUID()
+        const tempId = uuidv4()
         const newExpense = { ...expense, id: tempId }
         setExpenses((prev) => [newExpense, ...prev])
 
@@ -108,7 +109,7 @@ export function ExpenseProvider({ children }: { children: React.ReactNode }) {
     }
 
     const addRecurringRule = async (rule: Omit<RecurringRule, 'id'>) => {
-        const tempId = crypto.randomUUID()
+        const tempId = uuidv4()
         const newRule = { ...rule, id: tempId } // userId handled by server
         setRecurringRules((prev) => [...prev, newRule])
 
