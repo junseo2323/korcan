@@ -66,6 +66,10 @@ jobs:
             # Navigate to app directory
             cd ~/korcan-app
 
+            # Ensure db directory exists and has permissions (SQLite issue)
+            mkdir -p db_data
+            sudo chmod -R 777 db_data
+
             # Pull the latest image
             sudo docker compose -f docker-compose.prod.yml pull
 
