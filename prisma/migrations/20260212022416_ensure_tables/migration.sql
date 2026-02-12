@@ -1,4 +1,4 @@
-PRAGMA foreign_keys=OFF;
+PRAGMA foreign_keys = OFF;
 
 -- CreateTable
 CREATE TABLE IF NOT EXISTS "Friend" (
@@ -65,12 +65,26 @@ CREATE TABLE IF NOT EXISTS "_MeetupParticipants" (
     CONSTRAINT "_MeetupParticipants_B_fkey" FOREIGN KEY ("B") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
--- CreateIndex
-CREATE UNIQUE INDEX IF NOT EXISTS "Friend_userId_friendId_key" ON "Friend"("userId", "friendId");
-CREATE UNIQUE INDEX IF NOT EXISTS "ChatRoom_meetupId_key" ON "ChatRoom"("meetupId");
-CREATE UNIQUE INDEX IF NOT EXISTS "_ChatRoomToUser_AB_unique" ON "_ChatRoomToUser"("A", "B");
-CREATE INDEX IF NOT EXISTS "_ChatRoomToUser_B_index" ON "_ChatRoomToUser"("B");
-CREATE UNIQUE INDEX IF NOT EXISTS "_MeetupParticipants_AB_unique" ON "_MeetupParticipants"("A", "B");
-CREATE INDEX IF NOT EXISTS "_MeetupParticipants_B_index" ON "_MeetupParticipants"("B");
+-- CreateTable
+CREATE TABLE IF NOT EXISTS "Image" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "url" TEXT NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "postId" TEXT,
+    CONSTRAINT "Image_postId_fkey" FOREIGN KEY ("postId") REFERENCES "Post" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
 
-PRAGMA foreign_keys=ON;
+-- CreateIndex
+CREATE UNIQUE INDEX IF NOT EXISTS "Friend_userId_friendId_key" ON "Friend" ("userId", "friendId");
+
+CREATE UNIQUE INDEX IF NOT EXISTS "ChatRoom_meetupId_key" ON "ChatRoom" ("meetupId");
+
+CREATE UNIQUE INDEX IF NOT EXISTS "_ChatRoomToUser_AB_unique" ON "_ChatRoomToUser" ("A", "B");
+
+CREATE INDEX IF NOT EXISTS "_ChatRoomToUser_B_index" ON "_ChatRoomToUser" ("B");
+
+CREATE UNIQUE INDEX IF NOT EXISTS "_MeetupParticipants_AB_unique" ON "_MeetupParticipants" ("A", "B");
+
+CREATE INDEX IF NOT EXISTS "_MeetupParticipants_B_index" ON "_MeetupParticipants" ("B");
+
+PRAGMA foreign_keys = ON;
