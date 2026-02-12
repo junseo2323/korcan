@@ -89,11 +89,11 @@ jobs:
 
             sudo docker compose -f docker-compose.prod.yml up -d
 
-            # RESET DATABASE (One-time fix for schema mismatch defined by USER REQUEST)
-            echo "RESETTING DATABASE..."
-            sudo docker compose -f docker-compose.prod.yml exec -T -e DATABASE_URL="file:/app/db/prod.db" app npx prisma migrate reset --force
+            # RESET DATABASE REMOVED - Using 'prisma db push' in start script defined in package.json
+            # echo "RESETTING DATABASE..."
+            # sudo docker compose -f docker-compose.prod.yml exec -T -e DATABASE_URL="file:/app/db/prod.db" app npx prisma migrate reset --force
             
-            # Check migration status
+            # Check migration status (Optional, as db push runs on start)
             sudo docker compose -f docker-compose.prod.yml exec -T -e DATABASE_URL="file:/app/db/prod.db" app npx prisma migrate status
 
             # Prune unused images to save space
