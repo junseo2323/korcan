@@ -74,7 +74,12 @@ export async function PUT(req: Request) {
             }
         })
         return NextResponse.json(user)
-    } catch (error) {
-        return NextResponse.json({ error: 'Failed to register' }, { status: 500 })
+    } catch (error: any) {
+        console.error('Register error:', error)
+        return NextResponse.json({
+            error: 'Failed to register',
+            details: error.message,
+            stack: error.stack
+        }, { status: 500 })
     }
 }
