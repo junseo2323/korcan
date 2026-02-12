@@ -131,6 +131,7 @@ export default function ExpenseForm({ initialData, onSubmit, onCancel }: Expense
             <CategorySelector
                 selectedCategory={category}
                 onSelect={(cat) => setCategory(cat)}
+                allowCreation={!initialData}
             />
 
             <Input

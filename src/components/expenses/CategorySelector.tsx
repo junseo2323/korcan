@@ -60,11 +60,12 @@ const AddButton = styled.button`
 interface CategorySelectorProps {
   selectedCategory: string
   onSelect: (category: string) => void
+  allowCreation?: boolean
 }
 
 const DEFAULT_TAGS = ['Food', 'Transport', 'Shopping', 'Housing', 'Utilities']
 
-export default function CategorySelector({ selectedCategory, onSelect }: CategorySelectorProps) {
+export default function CategorySelector({ selectedCategory, onSelect, allowCreation = true }: CategorySelectorProps) {
   const [customTags, setCustomTags] = useLocalStorage<string[]>('korcan_custom_tags', [])
   const [newTag, setNewTag] = useState('')
 
@@ -96,20 +97,22 @@ export default function CategorySelector({ selectedCategory, onSelect }: Categor
           </TagChip>
         ))}
       </TagList>
-      <form onSubmit={handleAdd} style={{ marginTop: '0.5rem' }}>
-        <InputWrapper>
-          <div style={{ flex: 1 }}>
-            <Input
-              placeholder="New Category..."
-              value={newTag}
-              onChange={(e) => setNewTag(e.target.value)}
-              fullWidth
-            />
-          </div>
-          <AddButton type="submit">+</AddButton>
-        </InputWrapper>
-        <small style={{ opacity: 0.6, fontSize: '0.8rem', display: 'block', marginTop: '4px' }}>Create or select a tag</small>
-      </form>
+      {allowCreation && (
+        <form onSubmit={handleAdd} style={{ marginTop: '0.5rem' }}>
+          <InputWrapper>
+            <div style={{ flex: 1 }}>
+              <Input
+                placeholder="New Category..."
+                value={newTag}
+                onChange={(e) => setNewTag(e.target.value)}
+                fullWidth
+              />
+            </div>
+            <AddButton type="submit">+</AddButton>
+          </InputWrapper>
+          <small style={{ opacity: 0.6, fontSize: '0.8rem', display: 'block', marginTop: '4px' }}>Create or select a tag</small>
+        </form>
+      )}
     </Container>
   )
 }
