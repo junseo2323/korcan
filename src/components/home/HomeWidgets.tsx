@@ -85,42 +85,92 @@ const DateValue = styled.div`
 
 export function TimezoneBlock() {
     const [now, setNow] = useState(new Date())
+    const [region, setRegion] = useState('America/Vancouver') // Default
+    const [isClient, setIsClient] = useState(false)
 
     useEffect(() => {
+        setIsClient(true)
+        const saved = localStorage.getItem('korcan_timezone_region')
+        if (saved) setRegion(saved)
+
         const timer = setInterval(() => setNow(new Date()), 1000)
         return () => clearInterval(timer)
     }, [])
 
-    // Korea Time (KST is UTC+9)
-    const kstOptions: Intl.DateTimeFormatOptions = { timeZone: 'Asia/Seoul', hour: '2-digit', minute: '2-digit', hour12: false }
-    const kstDateOptions: Intl.DateTimeFormatOptions = { timeZone: 'Asia/Seoul', month: 'short', day: 'numeric', weekday: 'short' }
-    const kstTime = new Intl.DateTimeFormat('en-US', kstOptions).format(now)
-    const kstDate = new Intl.DateTimeFormat('ko-KR', kstDateOptions).format(now)
+    const handleRegionChange = (newRegion: string) => {
+        setRegion(newRegion)
+        localStorage.setItem('korcan_timezone_region', newRegion)
+    }
 
-    // Vancouver Time (Pacific)
-    const pstOptions: Intl.DateTimeFormatOptions = { timeZone: 'America/Vancouver', hour: '2-digit', minute: '2-digit', hour12: false }
-    const pstDateOptions: Intl.DateTimeFormatOptions = { timeZone: 'America/Vancouver', month: 'short', day: 'numeric', weekday: 'short' }
-    const pstTime = new Intl.DateTimeFormat('en-US', pstOptions).format(now)
-    const pstDate = new Intl.DateTimeFormat('ko-KR', pstDateOptions).format(now)
+    // Region Options
+    const regions = [
+        { label: '🇨🇦 밴쿠버', value: 'America/Vancouver' },
+        { label: '🇨🇦 토론토', value: 'America/Toronto' },
+        { label: '🇨🇦 캘거리', value: 'America/Edmonton' },
+        { label: '🇨🇦 몬트리올', value: 'America/Toronto' }, // Same as Toronto time-wise usually
+        { label: '🇨🇦 핼리팩스', value: 'America/Halifax' },
+        { label: '🇨🇦 위니펙', value: 'America/Winnipeg' },
+    ]
 
-    // Calc time difference
-    // Simple heuristic: Get hour diff
-    // Actually displaying just times is enough.
+    const currentRegionLabel = regions.find(r => r.value === region)?.label || '🇨🇦 밴쿠버'
+
+    // Formatter
+    const formatTime = (date: Date, timeZone: string) => {
+        return new Intl.DateTimeFormat('en-US', {
+            timeZone,
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+        }).format(date)
+    }
+
+    const formatDate = (date: Date, timeZone: string) => {
+        return new Intl.DateTimeFormat('ko-KR', {
+            timeZone,
+            month: 'short',
+            day: 'numeric',
+            weekday: 'short'
+        }).format(date)
+    }
+
+    if (!isClient) return <BlockBase style={{ backgroundColor: '#F4F6FA', height: '146px' }} />
 
     return (
         <BlockBase style={{ backgroundColor: '#F4F6FA' }}>
-            <BlockTitle>🌏 시차 확인</BlockTitle>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                <BlockTitle style={{ marginBottom: 0 }}>🌏 시차 확인</BlockTitle>
+                <select
+                    value={region}
+                    onChange={(e) => handleRegionChange(e.target.value)}
+                    style={{
+                        fontSize: '0.8rem',
+                        padding: '2px 8px',
+                        borderRadius: '12px',
+                        border: '1px solid #ddd',
+                        backgroundColor: 'white',
+                        cursor: 'pointer',
+                        outline: 'none'
+                    }}
+                >
+                    {regions.map(r => (
+                        <option key={r.label} value={r.value}>{r.label.split(' ')[1]}</option> // Show just city name in drop
+                    ))}
+                </select>
+            </div>
+
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <TimeDisplay>
-                    <TimeLabel>🇨🇦 밴쿠버</TimeLabel>
-                    <TimeValue>{pstTime}</TimeValue>
-                    <DateValue>{pstDate}</DateValue>
+                    <TimeLabel>{currentRegionLabel}</TimeLabel>
+                    <TimeValue>{formatTime(now, region)}</TimeValue>
+                    <DateValue>{formatDate(now, region)}</DateValue>
                 </TimeDisplay>
+
                 <div style={{ height: 40, width: 1, background: '#D1D5DB' }}></div>
+
                 <TimeDisplay>
                     <TimeLabel>🇰🇷 서울</TimeLabel>
-                    <TimeValue>{kstTime}</TimeValue>
-                    <DateValue>{kstDate}</DateValue>
+                    <TimeValue>{formatTime(now, 'Asia/Seoul')}</TimeValue>
+                    <DateValue>{formatDate(now, 'Asia/Seoul')}</DateValue>
                 </TimeDisplay>
             </div>
         </BlockBase>

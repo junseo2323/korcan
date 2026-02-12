@@ -21,23 +21,33 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
     const [exchangeRate, setExchangeRate] = useState<number>(DEFAULT_RATE)
 
     useEffect(() => {
-        // In a real app, fetch from an API like:
-        // fetch('https://api.exchangerate-api.com/v4/latest/CAD')
-        //   .then(res => res.json())
-        //   .then(data => setExchangeRate(data.rates.KRW))
-        // For MVP demo, setting a realistic static rate or simulating fetch
         const fetchRate = async () => {
             try {
-                // Simulating API call
-                // const res = await fetch('...') 
-                // const data = await res.json()
-                setExchangeRate(995.5) // Example live-ish rate
+                // Using a free exchange rate API (No key required for this specific endpoint usually, or uses public rate)
+                // Alternative: https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/cad.json
+                const res = await fetch('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/cad.json')
+
+                if (res.ok) {
+                    const data = await res.json()
+                    // data.cad.krw
+                    const rate = data.cad.krw
+                    if (rate) {
+                        setExchangeRate(rate)
+                        console.log(`Updated Exchange Rate: 1 CAD = ${rate} KRW`)
+                    }
+                } else {
+                    console.error('Exchange rate API error')
+                }
             } catch (e) {
                 console.error('Failed to fetch rate, using default', e)
-                setExchangeRate(DEFAULT_RATE)
+                // Fallback is already set
             }
         }
         fetchRate()
+
+        // Refresh every hour
+        const interval = setInterval(fetchRate, 3600000)
+        return () => clearInterval(interval)
     }, [])
 
     const toggleCurrency = () => {
