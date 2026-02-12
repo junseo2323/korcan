@@ -114,8 +114,12 @@ export async function POST(req: Request) {
             })
             return NextResponse.json(post)
         }
-    } catch (error) {
-        console.error(error)
-        return NextResponse.json({ error: 'Failed to create post' }, { status: 500 })
+    } catch (error: any) {
+        console.error('Create Post Error:', error)
+        return NextResponse.json({
+            error: 'Failed to create post',
+            details: error.message,
+            stack: error.stack
+        }, { status: 500 })
     }
 }

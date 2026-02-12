@@ -70,8 +70,12 @@ export async function POST(req: Request) {
 
         return NextResponse.json({ urls: uploadedUrls })
 
-    } catch (e) {
+    } catch (e: any) {
         console.error('Upload error:', e)
-        return NextResponse.json({ error: 'Upload failed' }, { status: 500 })
+        return NextResponse.json({
+            error: 'Upload failed',
+            details: e.message,
+            stack: e.stack
+        }, { status: 500 })
     }
 }
