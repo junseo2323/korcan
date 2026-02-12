@@ -27,6 +27,7 @@ const DateHeader = styled.div`
   font-size: 0.9rem;
   color: ${({ theme }) => theme.colors.text.secondary};
   margin-bottom: 0.5rem;
+  margin-top: 5px;
   padding: 0 1rem;
 `
 
