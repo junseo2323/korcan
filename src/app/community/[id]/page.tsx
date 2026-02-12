@@ -269,6 +269,20 @@ export default function PostDetailPage() {
             marginBottom: '2rem',
             border: '1px solid #e2e8f0'
           }}>
+            {post.meetup.image && (
+              <img
+                src={post.meetup.image}
+                alt="Meetup Thumbnail"
+                style={{
+                  width: '100%',
+                  height: '200px',
+                  objectFit: 'cover',
+                  borderRadius: '8px',
+                  marginBottom: '1.5rem',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                }}
+              />
+            )}
             <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '1rem', color: '#1e293b' }}>📅 모임 정보</h3>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
               <div>
@@ -378,6 +392,25 @@ export default function PostDetailPage() {
                 ))}
               </div>
             </div>
+          </div>
+        )}
+
+        {post.images && post.images.length > 0 && (
+          <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', marginBottom: '1.5rem', scrollbarWidth: 'none' }}>
+            {post.images.map((img: any) => (
+              <img
+                key={img.id}
+                src={img.url}
+                alt="Post image"
+                style={{
+                  height: '300px',
+                  borderRadius: '12px',
+                  objectFit: 'cover',
+                  flexShrink: 0,
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                }}
+              />
+            ))}
           </div>
         )}
 

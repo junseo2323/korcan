@@ -26,13 +26,14 @@ export interface Post {
         currentMembers: number
         status: string
         region: string
+        image?: string | null
     } | null
 }
 
 interface PostContextType {
     posts: Post[]
     refreshPosts: () => void
-    addPost: (title: string, content: string, category?: string, region?: string, meetupData?: any) => Promise<void>
+    addPost: (title: string, content: string, category?: string, region?: string, meetupData?: any, images?: string[]) => Promise<void>
     updatePost: (id: string, updates: Partial<Post>) => void
     selectedRegion: string
     setSelectedRegion: (region: string) => void
@@ -69,12 +70,12 @@ export function PostProvider({ children }: { children: React.ReactNode }) {
         fetchPosts(selectedRegion)
     }
 
-    const addPost = async (title: string, content: string, category: string = '일반', region?: string, meetupData?: any) => {
+    const addPost = async (title: string, content: string, category: string = '일반', region?: string, meetupData?: any, images?: string[]) => {
         try {
             const res = await fetch('/api/posts', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title, content, category, region, meetupData })
+                body: JSON.stringify({ title, content, category, region, meetupData, images })
             })
             if (res.ok) {
                 refreshPosts()

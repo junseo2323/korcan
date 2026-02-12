@@ -1,8 +1,10 @@
 'use client'
 
-import { signIn } from 'next-auth/react'
+import { signIn, useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import styled from 'styled-components'
 import { MessageCircle } from 'lucide-react'
+import { useEffect, useState } from 'react'
 
 const Container = styled.div`
   display: flex;
@@ -75,6 +77,35 @@ const GoogleButton = styled.button`
 `
 
 export default function LoginPage() {
+  const router = useRouter()
+  const { data: session, status } = useSession()
+  const [autoLoginAttempted, setAutoLoginAttempted] = useState(false)
+
+  // Auto-login for development
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development' && status === 'unauthenticated' && !autoLoginAttempted) {
+      setAutoLoginAttempted(true)
+      signIn('dev-auto-login', { callbackUrl: '/' })
+    }
+  }, [status, autoLoginAttempted])
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (session?.user) {
+      router.push('/')
+    }
+  }, [session, router])
+
+  // Show loading while auto-login is in progress
+  if (process.env.NODE_ENV === 'development' && status === 'loading') {
+    return (
+      <Container>
+        <Logo>KorCan</Logo>
+        <Description>개발 모드: 자동 로그인 중...</Description>
+      </Container>
+    )
+  }
+
   return (
     <Container>
       <Logo>KorCan</Logo>

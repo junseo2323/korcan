@@ -41,9 +41,9 @@ export async function GET(
                     chatRoom: {
                         select: { id: true }
                     },
-
                 }
-            }
+            },
+            images: true
         }
     })
 

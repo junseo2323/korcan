@@ -5,7 +5,7 @@ import styled from 'styled-components'
 import { useRouter } from 'next/navigation'
 import { usePosts } from '@/contexts/PostContext'
 import { useSession } from 'next-auth/react'
-import { Plus, MessageCircle, ThumbsUp } from 'lucide-react'
+import { Plus, MessageCircle, ThumbsUp, ChevronDown } from 'lucide-react'
 import MeetupCard from '@/components/MeetupCard'
 
 const Container = styled.div`
@@ -19,8 +19,8 @@ const Container = styled.div`
 
 const Header = styled.div`
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  gap: 1rem;
   margin-bottom: 1.5rem;
 `
 
@@ -30,19 +30,103 @@ const Title = styled.h1`
   color: ${({ theme }) => theme.colors.text.primary};
 `
 
-const WriteButton = styled.button`
+const DropdownContainer = styled.div`
+  position: relative;
+  display: inline-block;
+`
+
+const DropdownTrigger = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s;
+  
+  &:hover {
+    border-color: #3b82f6;
+    color: #3b82f6;
+  }
+`
+
+const DropdownMenu = styled.div<{ $isOpen: boolean }>`
+  position: absolute;
+  top: 120%;
+  right: 0;
+  min-width: 180px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  padding: 0.5rem;
+  z-index: 50;
+  display: ${({ $isOpen }) => $isOpen ? 'block' : 'none'};
+  border: 1px solid #f3f4f6;
+  max-height: 400px;
+  overflow-y: auto;
+`
+
+const DropdownItem = styled.button<{ $isSelected: boolean }>`
+  width: 100%;
+  text-align: left;
+  padding: 0.75rem 1rem;
+  background: ${({ $isSelected }) => $isSelected ? '#eff6ff' : 'white'};
+  color: ${({ $isSelected }) => $isSelected ? '#3b82f6' : '#374151'};
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: ${({ $isSelected }) => $isSelected ? 600 : 400};
+  font-size: 0.9rem;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: ${({ $isSelected }) => $isSelected ? '#eff6ff' : '#f9fafb'};
+  }
+`
+
+const FloatingWriteButton = styled.button`
+  position: fixed;
+  bottom: calc(80px + 24px); /* Bottom Nav height (approx 60-80px) + margin */
+  right: 24px;
   background-color: ${({ theme }) => theme.colors.primary};
   color: white;
   border: none;
-  border-radius: 20px;
-  padding: 0.5rem 1rem;
-  font-size: 0.9rem;
+  border-radius: 30px;
+  padding: 12px 24px;
+  font-size: 1rem;
   font-weight: 600;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 8px;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
+  z-index: 100;
+  transition: transform 0.2s;
+
+  &:hover {
+    transform: translateY(-2px);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+`
+
+const TabButton = styled.button<{ $isActive: boolean }>`
+  border: none;
+  background: none;
+  font-size: 1.1rem;
+  font-weight: ${({ $isActive }) => $isActive ? 700 : 500};
+  color: ${({ $isActive }) => $isActive ? '#111827' : '#9ca3af'};
+  cursor: pointer;
+  padding: 0.5rem 0.2rem;
+  border-bottom: ${({ $isActive }) => $isActive ? '2px solid #111827' : '2px solid transparent'};
+  transition: all 0.2s;
 `
 
 const PostList = styled.div`
@@ -112,106 +196,156 @@ export default function CommunityPage() {
   const router = useRouter()
   const { posts, selectedRegion, setSelectedRegion } = usePosts()
   const { data: session } = useSession()
+  const [activeTab, setActiveTab] = useState<'board' | 'meetup'>('board')
   const [selectedCategory, setSelectedCategory] = useState('All')
-  const [categories, setCategories] = useState<string[]>(['All', '일반', '질문', '정보', '잡담'])
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+
+  // Board categories (excluding '모임')
+  const boardCategories = ['All', '일반', '질문', '정보', '잡담']
+
+  const regions = [
+    { id: 'All', label: '전체 (All Regions)' },
+    { id: 'Global', label: '캐나다 전체 (Global)' },
+    { id: 'Toronto', label: '토론토' },
+    { id: 'Vancouver', label: '밴쿠버' },
+    { id: 'Montreal', label: '몬트리올' },
+    { id: 'Quebec', label: '퀘벡' },
+    { id: 'Calgary', label: '캘거리' },
+    { id: 'Ottawa', label: '오타와' },
+    { id: 'Edmonton', label: '에드먼턴' },
+    { id: 'Winnipeg', label: '위니펙' },
+    { id: 'Halifax', label: '할리팩스' },
+    { id: 'Other', label: '그 외' },
+  ]
 
   // Fetch User Region to set default
   useEffect(() => {
     if (session?.user?.region) {
-      // Only set if current is All (initial load)
       if (selectedRegion === 'All') {
         setSelectedRegion(session.user.region)
       }
     }
   }, [session, selectedRegion, setSelectedRegion])
 
+  // Close dropdown when clicking outside
   useEffect(() => {
-    fetch('/api/posts/categories')
-      .then(res => res.json())
-      .then(data => {
-        if (Array.isArray(data)) {
-          const unique = Array.from(new Set(['All', ...data]))
-          setCategories(unique)
-        }
-      })
-      .catch(console.error)
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('#region-dropdown')) {
+        setIsDropdownOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  const filteredPosts = selectedCategory === 'All'
-    ? posts
-    : posts.filter(post => post.category === selectedCategory)
+  // Filter posts based on active tab
+  const filteredPosts = posts.filter(post => {
+    if (activeTab === 'meetup') {
+      return post.category === '모임'
+    } else {
+      // Board view: Exclude '모임'
+      if (post.category === '모임') return false
+      // Apply category filter
+      if (selectedCategory !== 'All' && post.category !== selectedCategory) return false
+      return true
+    }
+  })
+
+  // Currently selected region label
+  const currentRegionLabel = regions.find(r => r.id === selectedRegion)?.label || selectedRegion
 
   return (
     <Container>
       <Header>
-        <Title>자유게시판</Title>
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-          <select
-            value={selectedRegion}
-            onChange={(e) => setSelectedRegion(e.target.value)}
-            style={{
-              padding: '0.5rem',
-              borderRadius: '8px',
-              border: '1px solid #e5e7eb',
-              fontSize: '0.9rem'
-            }}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Title>커뮤니티</Title>
+
+          <DropdownContainer id="region-dropdown">
+            <DropdownTrigger onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
+              {currentRegionLabel}
+              <ChevronDown size={16} />
+            </DropdownTrigger>
+            <DropdownMenu $isOpen={isDropdownOpen}>
+              {regions.map(region => (
+                <DropdownItem
+                  key={region.id}
+                  $isSelected={selectedRegion === region.id}
+                  onClick={() => {
+                    setSelectedRegion(region.id)
+                    setIsDropdownOpen(false)
+                  }}
+                >
+                  {region.label}
+                </DropdownItem>
+              ))}
+            </DropdownMenu>
+          </DropdownContainer>
+        </div>
+
+        <div style={{ display: 'flex', gap: '1.5rem', borderBottom: '1px solid #f3f4f6' }}>
+          <TabButton
+            $isActive={activeTab === 'board'}
+            onClick={() => setActiveTab('board')}
           >
-            <option value="All">전체 (All Regions)</option>
-            {/* Global? Or just treat All as Global + Regions? */}
-            {/* Wait, user said "Canada Board" is global. */}
-            {/* Maybe we need a specific 'Global' option explicitly? */}
-            <option value="Global">캐나다 전체 (Global)</option>
-            <option value="Toronto">토론토</option>
-            <option value="Vancouver">밴쿠버</option>
-            <option value="Montreal">몬트리올</option>
-            <option value="Quebec">퀘벡</option>
-            <option value="Calgary">캘거리</option>
-            <option value="Ottawa">오타와</option>
-            <option value="Edmonton">에드먼턴</option>
-            <option value="Winnipeg">위니펙</option>
-            <option value="Halifax">할리팩스</option>
-            <option value="Other">그 외</option>
-          </select>
-          <WriteButton onClick={() => router.push('/community/write')}>
-            <Plus size={18} />
-            글쓰기
-          </WriteButton>
+            자유게시판
+          </TabButton>
+          <TabButton
+            $isActive={activeTab === 'meetup'}
+            onClick={() => setActiveTab('meetup')}
+          >
+            모임
+          </TabButton>
         </div>
       </Header>
 
-      <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', paddingBottom: '1rem', marginBottom: '1rem' }}>
-        {categories.map(cat => (
-          <button
-            key={cat}
-            onClick={() => setSelectedCategory(cat)}
-            style={{
-              padding: '0.5rem 1rem',
-              borderRadius: '20px',
-              border: 'none',
-              backgroundColor: selectedCategory === cat ? '#3b82f6' : 'white',
-              color: selectedCategory === cat ? 'white' : '#4b5563',
-              cursor: 'pointer',
-              whiteSpace: 'nowrap',
-              fontSize: '0.9rem',
-              fontWeight: 600,
-              boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
-            }}
-          >
-            {cat}
-          </button>
-        ))}
-      </div>
+      {/* Category Filter - Only show in Board view */}
+      {activeTab === 'board' && (
+        <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', paddingBottom: '1rem', marginBottom: '1rem', scrollbarWidth: 'none' }}>
+          {boardCategories.map(cat => (
+            <button
+              key={cat}
+              onClick={() => setSelectedCategory(cat)}
+              style={{
+                padding: '0.5rem 1rem',
+                borderRadius: '20px',
+                border: 'none',
+                backgroundColor: selectedCategory === cat ? '#3b82f6' : 'white',
+                color: selectedCategory === cat ? 'white' : '#4b5563',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                fontSize: '0.9rem',
+                fontWeight: 600,
+                boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+              }}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+      )}
 
-      <PostList>
-        {filteredPosts.length === 0 ? (
-          <div style={{ textAlign: 'center', color: '#888', marginTop: '3rem' }}>
-            {selectedCategory === 'All' ? '첫 번째 글을 작성해보세요!' : '해당 카테고리에 글이 없습니다.'}
-          </div>
-        ) : (
-          filteredPosts.map(post => (
-            post.category === '모임' && post.meetup ? (
+      {/* Post List / Grid */}
+      {activeTab === 'meetup' ? (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
+          {filteredPosts.length === 0 ? (
+            <div style={{ gridColumn: '1 / -1', textAlign: 'center', color: '#888', marginTop: '3rem' }}>
+              등록된 모임이 없습니다. 첫 모임을 만들어보세요!
+            </div>
+          ) : (
+            filteredPosts.map(post => (
               <MeetupCard key={post.id} post={post} />
-            ) : (
+            ))
+          )}
+        </div>
+      ) : (
+        <PostList>
+          {filteredPosts.length === 0 ? (
+            <div style={{ textAlign: 'center', color: '#888', marginTop: '3rem' }}>
+              {selectedCategory === 'All' ? '첫 번째 글을 작성해보세요!' : '해당 카테고리에 글이 없습니다.'}
+            </div>
+          ) : (
+            filteredPosts.map(post => (
               <PostCard key={post.id} onClick={() => router.push(`/community/${post.id}`)}>
                 <div style={{ marginBottom: '0.5rem' }}>
                   <span style={{
@@ -239,10 +373,16 @@ export default function CommunityPage() {
                   </MetaRight>
                 </MetaRow>
               </PostCard>
-            )
-          ))
-        )}
-      </PostList>
+            ))
+          )}
+        </PostList>
+      )}
+
+      {/* Floating Write Button */}
+      <FloatingWriteButton onClick={() => router.push(`/community/write?type=${activeTab}`)}>
+        <Plus size={20} />
+        {activeTab === 'meetup' ? '모임 만들기' : '글쓰기'}
+      </FloatingWriteButton>
     </Container>
   )
 }

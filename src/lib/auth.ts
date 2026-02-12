@@ -1,5 +1,6 @@
 import KakaoProvider from "next-auth/providers/kakao"
 import GoogleProvider from "next-auth/providers/google"
+import CredentialsProvider from "next-auth/providers/credentials"
 import { PrismaAdapter } from "@next-auth/prisma-adapter"
 import { prisma } from "@/lib/prisma"
 import { NextAuthOptions } from "next-auth"
@@ -15,6 +16,21 @@ export const authOptions: NextAuthOptions = {
             clientId: process.env.KAKAO_CLIENT_ID!,
             clientSecret: process.env.KAKAO_CLIENT_SECRET!,
         }),
+        // Development-only auto-login
+        ...(process.env.NODE_ENV === 'development' ? [
+            CredentialsProvider({
+                id: 'dev-auto-login',
+                name: 'Dev Auto Login',
+                credentials: {},
+                async authorize() {
+                    // Return test user for development
+                    const testUser = await prisma.user.findUnique({
+                        where: { email: 'test@localhost.dev' }
+                    })
+                    return testUser
+                }
+            })
+        ] : []),
     ],
     session: {
         strategy: "jwt",

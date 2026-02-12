@@ -42,7 +42,7 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json()
-    const { title, content, category, region, meetupData } = body
+    const { title, content, category, region, meetupData, images } = body
 
     if (!title || !content) {
         return NextResponse.json({ error: 'Title and content are required' }, { status: 400 })
@@ -60,6 +60,7 @@ export async function POST(req: Request) {
                         date: new Date(meetupData.date),
                         maxMembers: parseInt(meetupData.maxMembers),
                         region: region === 'Global' ? 'Global' : (region || 'Unknown'),
+                        image: meetupData.image || null,
                         organizerId: session.user.id,
                         participants: {
                             connect: { id: session.user.id }
@@ -87,7 +88,10 @@ export async function POST(req: Request) {
                         category,
                         region: region === 'Global' ? null : region,
                         userId: session.user.id,
-                        meetupId: meetup.id
+                        meetupId: meetup.id,
+                        images: images && images.length > 0 ? {
+                            create: images.map((url: string) => ({ url }))
+                        } : undefined
                     }
                 })
 
@@ -102,7 +106,10 @@ export async function POST(req: Request) {
                     content,
                     category: category || '일반',
                     region: region === 'Global' ? null : region,
-                    userId: session.user.id
+                    userId: session.user.id,
+                    images: images && images.length > 0 ? {
+                        create: images.map((url: string) => ({ url }))
+                    } : undefined
                 }
             })
             return NextResponse.json(post)
