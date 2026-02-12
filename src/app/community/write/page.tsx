@@ -12,6 +12,7 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
   padding: 1.5rem;
+  padding-bottom: 150px; /* Ensure space for Nav and floating elements */
   min-height: 100vh;
   background-color: white;
   max-width: 600px;
