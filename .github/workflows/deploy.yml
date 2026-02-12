@@ -82,8 +82,8 @@ jobs:
 
             sudo docker compose -f docker-compose.prod.yml up -d
 
-            # Run migration (assuming service name 'web')
-            sudo docker compose -f docker-compose.prod.yml exec -T web npx prisma migrate deploy
+            # Run migration (assuming service name 'app')
+            sudo docker compose -f docker-compose.prod.yml exec -T app npx prisma migrate deploy
             
             # Prune unused images to save space
             sudo docker image prune -f

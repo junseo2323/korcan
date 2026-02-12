@@ -261,7 +261,7 @@ model Meetup {
   currentMembers Int      @default(1)
   status         String   @default("OPEN") // OPEN, CLOSED
   region         String
-  image          String?  // [NEW] Thumbnail image URL
+  image          String?  // [NEW] Thumbnail image URL (Trigger Rebuild)
 
   organizerId String
   organizer   User   @relation("OrganizedMeetups", fields: [organizerId], references: [id], onDelete: Cascade)
