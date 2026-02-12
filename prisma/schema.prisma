@@ -44,6 +44,9 @@ model User {
   // [NEW] MVP 2
   organizedMeetups    Meetup[] @relation("OrganizedMeetups")
   participatedMeetups Meetup[] @relation("MeetupParticipants")
+  
+  // [NEW] MVP 3
+  properties Property[]
 }
 
 model Friend {
@@ -228,8 +231,12 @@ model Like {
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  propertyId String?
+  property   Property? @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
   @@unique([userId, postId])
   @@unique([userId, productId])
+  @@unique([userId, propertyId])
 }
 
 // 5. Marketplace
@@ -273,4 +280,40 @@ model Meetup {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// 6. Real Estate (MVP 3)
+model Property {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  price       Float
+  currency    String   @default("CAD") // CAD, KRW
+  period      String   @default("MONTHLY") // MONTHLY, WEEKLY, DAILY, SALE
+  type        String   @default("RENT") // RENT, SHARE, SALE, DORMITORY
+  bedrooms    Int      @default(0)
+  bathrooms   Float    @default(0.0)
+  address     String
+  latitude    Float
+  longitude   Float
+  region      String
+  features    String?  // Comma separated e.g. "Wifi,Parking"
+  status      String   @default("AVAILABLE") // AVAILABLE, RENTED, SOLD
+  
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  images      PropertyImage[]
+  likes       Like[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model PropertyImage {
+  id         String   @id @default(cuid())
+  url        String
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
 }
