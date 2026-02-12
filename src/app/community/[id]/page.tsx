@@ -386,7 +386,7 @@ export default function PostDetailPage() {
               <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                 {post.meetup.participants.map((p: any) => (
                   <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: '4px', backgroundColor: 'white', padding: '4px 8px', borderRadius: '100px', border: '1px solid #e2e8f0' }}>
-                    <img src={p.image || '/placeholder-user.png'} style={{ width: '20px', height: '20px', borderRadius: '50%' }} />
+                    <img src={p.image || '/placeholder-user.svg'} style={{ width: '20px', height: '20px', borderRadius: '50%' }} />
                     <span style={{ fontSize: '0.8rem' }}>{p.name}</span>
                   </div>
                 ))}

@@ -377,7 +377,7 @@ export default function ChatPopup() {
                                     <ListItem key={f.id} onClick={() => {
                                         // Start chat logic...
                                     }}>
-                                        <Avatar src={f.image || '/placeholder-user.png'} />
+                                        <Avatar src={f.image || '/placeholder-user.svg'} />
                                         <Name>{f.name}</Name>
                                         <button
                                             style={{ marginLeft: 'auto', padding: '4px 8px', fontSize: '0.8rem', background: '#eee', border: 'none', borderRadius: 4, cursor: 'pointer' }}
@@ -411,7 +411,7 @@ export default function ChatPopup() {
                                             <MessageCircle size={20} />
                                         </div>
                                     ) : (
-                                        <Avatar src={getChatImage(chat) || '/placeholder-user.png'} />
+                                        <Avatar src={getChatImage(chat) || '/placeholder-user.svg'} />
                                     )}
                                     <Info>
                                         <Name>{getChatName(chat)}</Name>
