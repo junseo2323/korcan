@@ -395,6 +395,9 @@ export function MonthlyExpenseBlock({ expenses }: { expenses: { CAD: number, KRW
                     <CurrencyLabel>KRW (환산)</CurrencyLabel>
                     <ConvertedAmount $length={krwText.length}>{krwText}</ConvertedAmount>
                 </ExpenseRow>
+                <div style={{ marginTop: '0.75rem', fontSize: '0.75rem', color: '#9ca3af', textAlign: 'right' }}>
+                    환율: 1 CAD = {exchangeRate.toFixed(2)} KRW
+                </div>
             </BlockContent>
             <LinkButton href="/expenses">
                 내역 보기 <ChevronRight size={16} />
