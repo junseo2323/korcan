@@ -39,30 +39,55 @@ const CurrencyToggle = styled.div`
   align-items: flex-start;
 `
 
-export default function ExpenseForm() {
+interface ExpenseFormProps {
+    initialData?: {
+        id: string
+        amount: number
+        currency: 'CAD' | 'KRW'
+        category: string
+        date: string
+        note: string
+        tags?: string[]
+    }
+    onSubmit?: (data: any) => Promise<void>
+    onCancel?: () => void
+}
+
+export default function ExpenseForm({ initialData, onSubmit, onCancel }: ExpenseFormProps) {
     const { addExpense } = useExpenses()
     const { exchangeRate } = useCurrency()
 
-    const [amount, setAmount] = useState('')
-    const [currency, setCurrency] = useState<'CAD' | 'KRW'>('CAD')
-    const [category, setCategory] = useState('')
-    const [note, setNote] = useState('')
-    const [date, setDate] = useState(new Date().toISOString().split('T')[0])
+    const [amount, setAmount] = useState(initialData?.amount?.toString() || '')
+    const [currency, setCurrency] = useState<'CAD' | 'KRW'>(initialData?.currency || 'CAD')
+    const [category, setCategory] = useState(initialData?.category || '')
+    const [note, setNote] = useState(initialData?.note || '')
+    const [date, setDate] = useState(initialData?.date || new Date().toISOString().split('T')[0])
 
-    const handleSubmit = (e: React.FormEvent) => {
+    // If updating, maybe we want to keep existing tags or allow editing?
+    // For now, let's just preserve them if not exposed in UI yet.
+    // But this form doesn't have tag editing UI yet except via receipt logic?
+    // Let's assume tags are preserved in updates.
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         if (!amount || !category) return
 
-        addExpense({
+        const expenseData = {
             amount: parseFloat(amount),
             currency,
             category,
             date,
             note
-        })
+        }
 
-        setAmount('')
-        setNote('')
+        if (onSubmit) {
+            await onSubmit(expenseData)
+        } else {
+            await addExpense(expenseData)
+            setAmount('')
+            setNote('')
+            setCategory('')
+        }
     }
 
     const convertedPreview = amount
@@ -73,7 +98,9 @@ export default function ExpenseForm() {
 
     return (
         <FormContainer onSubmit={handleSubmit}>
-            <h3 style={{ margin: 0 }}>Add Expense</h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h3 style={{ margin: 0 }}>{initialData ? '내역 수정' : 'Add Expense'}</h3>
+            </div>
 
             <CurrencyToggle>
                 <Select
@@ -123,8 +150,14 @@ export default function ExpenseForm() {
             />
 
             <Button type="submit" fullWidth size="large">
-                Add Expense
+                {initialData ? '수정 완료' : 'Add Expense'}
             </Button>
+
+            {onCancel && (
+                <Button type="button" fullWidth size="large" variant="secondary" onClick={onCancel} style={{ marginTop: '0.5rem' }}>
+                    취소
+                </Button>
+            )}
         </FormContainer>
     )
 }

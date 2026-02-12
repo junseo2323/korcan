@@ -30,6 +30,7 @@ interface ExpenseContextType {
     recurringRules: RecurringRule[]
     addRecurringRule: (rule: Omit<RecurringRule, 'id'>) => Promise<void>
     removeRecurringRule: (id: string) => Promise<void>
+    updateExpense: (id: string, updates: Partial<Expense>) => Promise<void>
 }
 
 const ExpenseContext = createContext<ExpenseContextType | undefined>(undefined)
@@ -105,6 +106,25 @@ export function ExpenseProvider({ children }: { children: React.ReactNode }) {
             console.error(error)
             setExpenses(prevExpenses)
             alert('Failed to delete expense')
+        }
+    }
+
+    const updateExpense = async (id: string, updates: Partial<Expense>) => {
+        setExpenses((prev) => prev.map((e) => e.id === id ? { ...e, ...updates } : e))
+
+        try {
+            const res = await fetch(`/api/expenses/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updates)
+            })
+
+            if (!res.ok) throw new Error('Failed to update')
+            // Optionally sync with server response if needed
+        } catch (error) {
+            console.error(error)
+            alert('Failed to update expense')
+            // Revert or reload? For MVP, just alert.
         }
     }
 
@@ -201,6 +221,7 @@ export function ExpenseProvider({ children }: { children: React.ReactNode }) {
             expenses,
             addExpense,
             removeExpense,
+            updateExpense,
             recurringRules,
             addRecurringRule,
             removeRecurringRule
