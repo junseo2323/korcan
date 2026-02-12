@@ -85,34 +85,30 @@ const DateValue = styled.div`
 
 export function TimezoneBlock() {
     const [now, setNow] = useState(new Date())
-    const [region, setRegion] = useState('America/Vancouver') // Default
+    const [userTimeZone, setUserTimeZone] = useState('America/Vancouver')
+    const [cityLabel, setCityLabel] = useState('🇨🇦 밴쿠버')
     const [isClient, setIsClient] = useState(false)
 
     useEffect(() => {
         setIsClient(true)
-        const saved = localStorage.getItem('korcan_timezone_region')
-        if (saved) setRegion(saved)
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
+        setUserTimeZone(tz)
+
+        // Simple mapping
+        if (tz.includes('Vancouver')) setCityLabel('🇨🇦 밴쿠버')
+        else if (tz.includes('Toronto')) setCityLabel('🇨🇦 토론토')
+        else if (tz.includes('Edmonton')) setCityLabel('🇨🇦 캘거리')
+        else if (tz.includes('Montreal')) setCityLabel('🇨🇦 몬트리올')
+        else if (tz.includes('Winnipeg')) setCityLabel('🇨🇦 위니펙')
+        else if (tz.includes('Halifax')) setCityLabel('🇨🇦 핼리팩스')
+        else {
+            const city = tz.split('/')[1]?.replace(/_/g, ' ') || '캐나다'
+            setCityLabel(`🇨🇦 ${city}`)
+        }
 
         const timer = setInterval(() => setNow(new Date()), 1000)
         return () => clearInterval(timer)
     }, [])
-
-    const handleRegionChange = (newRegion: string) => {
-        setRegion(newRegion)
-        localStorage.setItem('korcan_timezone_region', newRegion)
-    }
-
-    // Region Options
-    const regions = [
-        { label: '🇨🇦 밴쿠버', value: 'America/Vancouver' },
-        { label: '🇨🇦 토론토', value: 'America/Toronto' },
-        { label: '🇨🇦 캘거리', value: 'America/Edmonton' },
-        { label: '🇨🇦 몬트리올', value: 'America/Toronto' }, // Same as Toronto time-wise usually
-        { label: '🇨🇦 핼리팩스', value: 'America/Halifax' },
-        { label: '🇨🇦 위니펙', value: 'America/Winnipeg' },
-    ]
-
-    const currentRegionLabel = regions.find(r => r.value === region)?.label || '🇨🇦 밴쿠버'
 
     // Formatter
     const formatTime = (date: Date, timeZone: string) => {
@@ -137,32 +133,12 @@ export function TimezoneBlock() {
 
     return (
         <BlockBase style={{ backgroundColor: '#F4F6FA' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-                <BlockTitle style={{ marginBottom: 0 }}>🌏 시차 확인</BlockTitle>
-                <select
-                    value={region}
-                    onChange={(e) => handleRegionChange(e.target.value)}
-                    style={{
-                        fontSize: '0.8rem',
-                        padding: '2px 8px',
-                        borderRadius: '12px',
-                        border: '1px solid #ddd',
-                        backgroundColor: 'white',
-                        cursor: 'pointer',
-                        outline: 'none'
-                    }}
-                >
-                    {regions.map(r => (
-                        <option key={r.label} value={r.value}>{r.label.split(' ')[1]}</option> // Show just city name in drop
-                    ))}
-                </select>
-            </div>
-
+            <BlockTitle>🌏 시차 확인</BlockTitle>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <TimeDisplay>
-                    <TimeLabel>{currentRegionLabel}</TimeLabel>
-                    <TimeValue>{formatTime(now, region)}</TimeValue>
-                    <DateValue>{formatDate(now, region)}</DateValue>
+                    <TimeLabel>{cityLabel}</TimeLabel>
+                    <TimeValue>{formatTime(now, userTimeZone)}</TimeValue>
+                    <DateValue>{formatDate(now, userTimeZone)}</DateValue>
                 </TimeDisplay>
 
                 <div style={{ height: 40, width: 1, background: '#D1D5DB' }}></div>
