@@ -94,8 +94,8 @@ jobs:
             sleep 15  # <--- 서버가 켜질 때까지 15초 대기 (매우 중요)
 
             echo "Running Database Migration (db push)..."
-            # deploy 대신 db push 사용 (스키마 강제 동기화)
-            sudo docker compose -f docker-compose.prod.yml exec -T app npx prisma db push
+            # deploy 대신 db push 사용 (스키마 강제 동기화) + 명시적 DB URL 및 데이터 손실 허용
+            sudo docker compose -f docker-compose.prod.yml exec -T -e DATABASE_URL="file:/app/db/prod.db" app npx prisma db push --accept-data-loss
 
             # Prune unused images
             sudo docker image prune -f
