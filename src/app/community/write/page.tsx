@@ -159,7 +159,7 @@ const IconInputWrapper = styled.div`
   }
 `
 
-export default function WritePostPage() {
+function WritePostContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { addPost } = usePosts()
@@ -391,5 +391,13 @@ export default function WritePostPage() {
         </SubmitButton>
       </Form>
     </Container >
+  )
+}
+
+export default function WritePostPage() {
+  return (
+    <React.Suspense fallback={<div style={{ padding: '2rem', textAlign: 'center' }}>Loading...</div>}>
+      <WritePostContent />
+    </React.Suspense>
   )
 }
