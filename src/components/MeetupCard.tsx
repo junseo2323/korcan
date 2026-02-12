@@ -24,9 +24,12 @@ const Card = styled.div`
   }
 `
 
-const ImageSection = styled.div<{ $gradient: string }>`
+const ImageSection = styled.div<{ $gradient: string; $imageUrl?: string | null }>`
   height: 160px;
-  background: ${({ $gradient }) => $gradient};
+  background: ${({ $gradient, $imageUrl }) =>
+    $imageUrl
+      ? `linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url(${$imageUrl}) center/cover no-repeat`
+      : $gradient};
   position: relative;
   display: flex;
   align-items: center;
@@ -140,7 +143,7 @@ export default function MeetupCard({ post }: MeetupCardProps) {
 
   return (
     <Card onClick={handleClick}>
-      <ImageSection $gradient={gradient}>
+      <ImageSection $gradient={gradient} $imageUrl={meetup.image}>
         <MeetupTitle>{post.title}</MeetupTitle>
         <StatusBadge $status={meetup.status}>
           {meetup.status === 'OPEN' ? '모집중' : '마감'}
