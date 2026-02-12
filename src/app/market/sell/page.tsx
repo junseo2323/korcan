@@ -5,6 +5,7 @@ import styled from 'styled-components'
 import { useRouter } from 'next/navigation'
 import { useMarket } from '@/contexts/MarketContext'
 import { ChevronLeft, Camera, X } from 'lucide-react'
+import Toast from '@/components/ui/Toast'
 
 const Container = styled.div`
   display: flex;
@@ -177,6 +178,13 @@ export default function SellPage() {
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
 
+  // Toast State
+  const [toast, setToast] = useState<{ show: boolean, message: string }>({ show: false, message: '' })
+
+  const showToast = (message: string) => {
+    setToast({ show: true, message })
+  }
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -194,11 +202,11 @@ export default function SellPage() {
         const data = await res.json()
         setImageUrl(data.url)
       } else {
-        alert('이미지 업로드 실패')
+        showToast('이미지 업로드 실패')
       }
     } catch (e) {
       console.error(e)
-      alert('이미지 업로드 오류')
+      showToast('이미지 업로드 오류')
     } finally {
       setUploading(false)
     }
@@ -211,7 +219,7 @@ export default function SellPage() {
     if (success) {
       router.push('/market')
     } else {
-      alert('상품 등록에 실패했습니다.')
+      showToast('상품 등록에 실패했습니다.')
       setLoading(false)
     }
   }
@@ -289,6 +297,13 @@ export default function SellPage() {
           {loading ? '등록 중...' : '등록하기'}
         </SubmitButton>
       </Form>
+
+      {toast.show && (
+        <Toast
+          message={toast.message}
+          onClose={() => setToast({ ...toast, show: false })}
+        />
+      )}
     </Container>
   )
 }

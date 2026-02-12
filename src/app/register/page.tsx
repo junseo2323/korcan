@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import styled from 'styled-components'
+import Toast from '@/components/ui/Toast'
 
 const Container = styled.div`
   display: flex;
@@ -102,6 +103,13 @@ export default function RegisterPage() {
 
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(false)
+
+  // Toast State
+  const [toast, setToast] = useState<{ show: boolean, message: string }>({ show: false, message: '' })
+
+  const showToast = (message: string) => {
+    setToast({ show: true, message })
+  }
 
   // Validation Patterns
   const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -210,11 +218,11 @@ export default function RegisterPage() {
         router.push('/')
         router.refresh()
       } else {
-        alert('Registration failed')
+        showToast('Registration failed')
       }
     } catch (e) {
       console.error(e)
-      alert('Error occurred')
+      showToast('Error occurred')
     } finally {
       setLoading(false)
     }
@@ -313,6 +321,13 @@ export default function RegisterPage() {
       <Button onClick={handleSubmit} disabled={!isValid || loading}>
         {loading ? '처리중...' : '가입 완료'}
       </Button>
+
+      {toast.show && (
+        <Toast
+          message={toast.message}
+          onClose={() => setToast({ ...toast, show: false })}
+        />
+      )}
     </Container>
   )
 }

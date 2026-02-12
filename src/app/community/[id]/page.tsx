@@ -328,11 +328,11 @@ export default function PostDetailPage() {
                       fetchPostDetail()
                     } else {
                       const err = await res.json()
-                      alert(err.error || '요청 실패')
+                      showToast(err.error || '요청 실패')
                     }
                   } catch (e) {
                     console.error(e)
-                    alert('오류가 발생했습니다.')
+                    showToast('오류가 발생했습니다.')
                   }
                 }}
                 disabled={post.meetup.status === 'CLOSED' && !post.meetup.participants.some((p: any) => p.id === session?.user?.id)}

@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { usePosts } from '@/contexts/PostContext'
 import { useSession } from 'next-auth/react'
 import { ChevronLeft, Image as ImageIcon, Calendar, MapPin, Users } from 'lucide-react'
+import Toast from '@/components/ui/Toast'
 
 const Container = styled.div`
   display: flex;
@@ -179,6 +180,13 @@ function WritePostContent() {
   const [maxMembers, setMaxMembers] = useState('4')
   const [meetupPlace, setMeetupPlace] = useState('')
 
+  // Toast State
+  const [toast, setToast] = useState<{ show: boolean, message: string }>({ show: false, message: '' })
+
+  const showToast = (message: string) => {
+    setToast({ show: true, message })
+  }
+
   const [scope, setScope] = useState<'Local' | 'Global'>('Local')
   const [postImages, setPostImages] = useState<File[]>([])
   const [previewUrls, setPreviewUrls] = useState<string[]>([])
@@ -222,7 +230,7 @@ function WritePostContent() {
       }
     } catch (e) {
       console.error('Image upload failed', e)
-      alert('이미지 업로드에 실패했습니다.')
+      showToast('이미지 업로드에 실패했습니다.')
     }
     return []
   }
@@ -230,7 +238,7 @@ function WritePostContent() {
   const handleSubmit = async () => {
     if (!title || !content) return
     if (isMeetup && (!meetupDate || !maxMembers)) {
-      alert('날짜와 인원 수를 입력해주세요.')
+      showToast('날짜와 인원 수를 입력해주세요.')
       return
     }
 
@@ -253,7 +261,7 @@ function WritePostContent() {
       await addPost(title, content, category, regionValue, meetupData, uploadedImageUrls)
       router.back()
     } catch (e) {
-      alert('글 작성에 실패했습니다.')
+      showToast('글 작성에 실패했습니다.')
       setLoading(false)
     }
   }
@@ -306,6 +314,21 @@ function WritePostContent() {
 
         {isMeetup && (
           <>
+            <MeetupFieldRow>
+              <Section style={{ flex: 1 }}>
+                <Label>날짜 및 시간</Label>
+                <IconInputWrapper>
+                  <Calendar size={20} color="#9ca3af" />
+                  <Input
+                    type="datetime-local"
+                    value={meetupDate}
+                    onChange={(e) => setMeetupDate(e.target.value)}
+                    style={{ fontSize: '0.95rem', fontWeight: 400 }}
+                  />
+                </IconInputWrapper>
+              </Section>
+            </MeetupFieldRow>
+
             <MeetupFieldRow>
               <Section style={{ flex: 1 }}>
                 <Label>최대 인원</Label>
@@ -390,6 +413,13 @@ function WritePostContent() {
           {loading ? '저장 중...' : '완료'}
         </SubmitButton>
       </Form>
+
+      {toast.show && (
+        <Toast
+          message={toast.message}
+          onClose={() => setToast({ ...toast, show: false })}
+        />
+      )}
     </Container >
   )
 }
