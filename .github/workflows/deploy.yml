@@ -74,13 +74,12 @@ jobs:
             sudo docker compose -f docker-compose.prod.yml pull
 
             # Update the running container
-            # Fix potential .env corruption (missing newline before AWS_S3_BUCKET_NAME)
-            sed -i 's/AWS_S3_BUCKET_NAME=/\nAWS_S3_BUCKET_NAME=/g' .env
+            # Fix potential .env corruption using Perl for reliability
+            perl -pi -e 's/AWS_S3_BUCKET_NAME=/\nAWS_S3_BUCKET_NAME=/g' .env
 
             # Ensure AWS_S3_BUCKET_NAME is present and correct
             if ! grep -q "AWS_S3_BUCKET_NAME" .env; then
-              echo "" >> .env
-              echo 'AWS_S3_BUCKET_NAME="korcan-uploads-production-syvt4j"' >> .env
+              printf "\nAWS_S3_BUCKET_NAME=\"korcan-uploads-production-syvt4j\"\n" >> .env
             else
               sed -i 's|AWS_S3_BUCKET_NAME=.*|AWS_S3_BUCKET_NAME="korcan-uploads-production-syvt4j"|g' .env
             fi
@@ -90,8 +89,12 @@ jobs:
 
             sudo docker compose -f docker-compose.prod.yml up -d
 
-            # Run migration (assuming service name 'app')
-            sudo docker compose -f docker-compose.prod.yml exec -T app npx prisma migrate deploy
+            # Run migration (Explicitly passing DATABASE_URL and printing status)
+            echo "Running migration..."
+            sudo docker compose -f docker-compose.prod.yml exec -T -e DATABASE_URL="file:/app/db/prod.db" app npx prisma migrate deploy
             
+            # Check migration status
+            sudo docker compose -f docker-compose.prod.yml exec -T -e DATABASE_URL="file:/app/db/prod.db" app npx prisma migrate status
+
             # Prune unused images to save space
             sudo docker image prune -f
