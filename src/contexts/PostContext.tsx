@@ -80,7 +80,9 @@ export function PostProvider({ children }: { children: React.ReactNode }) {
             if (res.ok) {
                 refreshPosts()
             } else {
-                throw new Error('Failed to create post')
+                const errData = await res.json().catch(() => ({}))
+                console.error('Server Error Details:', errData)
+                throw new Error(errData.details || errData.error || 'Failed to create post')
             }
         } catch (e) {
             console.error(e)
