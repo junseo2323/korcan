@@ -70,11 +70,15 @@ jobs:
             sudo docker compose -f docker-compose.prod.yml pull
 
             # Update the running container
-            # Fix .env if missing AWS_S3_BUCKET_NAME
+            # Ensure AWS_S3_BUCKET_NAME is present and correct
             if ! grep -q "AWS_S3_BUCKET_NAME" .env; then
-              echo "" >> .env
-              echo 'AWS_S3_BUCKET_NAME="korcan-uploads-placeholder"' >> .env
+              echo 'AWS_S3_BUCKET_NAME="korcan-uploads-production-syvt4j"' >> .env
+            else
+              sed -i 's|AWS_S3_BUCKET_NAME=.*|AWS_S3_BUCKET_NAME="korcan-uploads-production-syvt4j"|g' .env
             fi
+
+            # Update NEXTAUTH_URL
+            sed -i 's|NEXTAUTH_URL=.*|NEXTAUTH_URL="http://korcan-test.duckdns.org"|g' .env
 
             sudo docker compose -f docker-compose.prod.yml up -d
 
