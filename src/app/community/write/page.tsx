@@ -92,6 +92,19 @@ const TextArea = styled.textarea`
   }
 `
 
+const FixedButtonWrapper = styled.div`
+  position: fixed;
+  bottom: calc(60px + env(safe-area-inset-bottom));
+  left: 0;
+  right: 0;
+  padding: 1rem;
+  background-color: white;
+  border-top: 1px solid ${({ theme }) => theme.colors.neutral.gray200};
+  z-index: 800;
+  max-width: 600px; /* Match Container max-width if centered, or just 100% and centered content */
+  margin: 0 auto; /* To center inside the viewport if desktop */
+`
+
 const SubmitButton = styled.button`
   background-color: ${({ theme }) => theme.colors.primary};
   color: white;
@@ -101,7 +114,7 @@ const SubmitButton = styled.button`
   font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
-  margin-top: 2rem;
+  width: 100%;
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
   transition: transform 0.1s;
   
@@ -410,9 +423,11 @@ function WritePostContent() {
           />
         </Section>
 
-        <SubmitButton onClick={handleSubmit} disabled={!title || !content || loading}>
-          {loading ? '저장 중...' : '완료'}
-        </SubmitButton>
+        <FixedButtonWrapper>
+          <SubmitButton onClick={handleSubmit} disabled={!title || !content || loading}>
+            {loading ? '저장 중...' : '완료'}
+          </SubmitButton>
+        </FixedButtonWrapper>
       </Form>
 
       {toast.show && (
