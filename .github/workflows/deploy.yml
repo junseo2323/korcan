@@ -74,8 +74,12 @@ jobs:
             sudo docker compose -f docker-compose.prod.yml pull
 
             # Update the running container
+            # Fix potential .env corruption (missing newline before AWS_S3_BUCKET_NAME)
+            sed -i 's/AWS_S3_BUCKET_NAME=/\nAWS_S3_BUCKET_NAME=/g' .env
+
             # Ensure AWS_S3_BUCKET_NAME is present and correct
             if ! grep -q "AWS_S3_BUCKET_NAME" .env; then
+              echo "" >> .env
               echo 'AWS_S3_BUCKET_NAME="korcan-uploads-production-syvt4j"' >> .env
             else
               sed -i 's|AWS_S3_BUCKET_NAME=.*|AWS_S3_BUCKET_NAME="korcan-uploads-production-syvt4j"|g' .env
