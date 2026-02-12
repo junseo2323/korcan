@@ -11,7 +11,7 @@ import styled from 'styled-components'
 
 const MobileWrapper = styled.div<{ $isAuthPage: boolean }>`
   padding-top: ${({ $isAuthPage }) => $isAuthPage ? '0' : '60px'};
-  padding-bottom: ${({ $isAuthPage }) => $isAuthPage ? '0' : '80px'};
+  padding-bottom: ${({ $isAuthPage }) => $isAuthPage ? '0' : 'calc(90px + env(safe-area-inset-bottom))'};
   min-height: 100vh;
   position: relative;
 `
