@@ -138,7 +138,7 @@ const MapPreviewWrapper = styled.div`
 
 const FixedButtonWrapper = styled.div`
   position: fixed;
-  bottom: 70px;
+  bottom: 60px;
   left: 0;
   right: 0;
   padding: 1rem;

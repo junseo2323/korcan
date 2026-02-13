@@ -51,14 +51,24 @@ export default function BottomNavigation() {
     { href: '/market', label: '장터', icon: ShoppingBag },
   ]
 
+  const isActive = (href: string) => {
+    if (href === '/market') {
+      return pathname.startsWith('/market') || pathname.startsWith('/real-estate')
+    }
+    return pathname === href
+  }
+
   return (
     <NavContainer>
-      {links.map(({ href, label, icon: Icon }) => (
-        <NavItem key={href} href={href} $active={pathname === href}>
-          <Icon size={24} strokeWidth={pathname === href ? 2.5 : 2} />
-          <span>{label}</span>
-        </NavItem>
-      ))}
+      {links.map(({ href, label, icon: Icon }) => {
+        const active = isActive(href)
+        return (
+          <NavItem key={href} href={href} $active={active}>
+            <Icon size={24} strokeWidth={active ? 2.5 : 2} />
+            <span>{label}</span>
+          </NavItem>
+        )
+      })}
     </NavContainer>
   )
 }
