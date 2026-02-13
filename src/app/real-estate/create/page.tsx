@@ -138,7 +138,7 @@ const MapPreviewWrapper = styled.div`
 
 const FixedButtonWrapper = styled.div`
   position: fixed;
-  bottom: 0;
+  bottom: 80px;
   left: 0;
   right: 0;
   padding: 1rem;
@@ -250,6 +250,7 @@ export default function CreatePropertyPage() {
     const [featureInput, setFeatureInput] = useState('')
 
     const handleAddFeature = (e: React.KeyboardEvent) => {
+        if (e.nativeEvent.isComposing) return // Fix IME Bug
         if (e.key === 'Enter' && featureInput.trim()) {
             e.preventDefault()
             if (!features.includes(featureInput.trim())) {
@@ -305,7 +306,10 @@ function CreatePropertyFormContent({ state, session, router }: any) {
     const handleSearchAddress = () => {
         if (!geocoder || !state.addressInput) return
 
-        geocoder.geocode({ address: state.addressInput }, (results, status) => {
+        geocoder.geocode({
+            address: state.addressInput,
+            componentRestrictions: { country: 'CA' } // Restrict to Canada
+        }, (results, status) => {
             if (status === 'OK' && results && results[0]) {
                 const loc = results[0].geometry.location
                 state.setLocation({ lat: loc.lat(), lng: loc.lng() })
@@ -502,7 +506,7 @@ function CreatePropertyFormContent({ state, session, router }: any) {
                         ))}
                         <input
                             style={{ border: 'none', outline: 'none', background: 'transparent', flex: 1, minWidth: '100px' }}
-                            placeholder="입력 후 Enter (예: 주차가능, 와이파이)"
+                            placeholder="입력 후 Enter (예: 주차가능, 와이파이)"
                             value={state.featureInput}
                             onChange={e => state.setFeatureInput(e.target.value)}
                             onKeyDown={state.handleAddFeature}
