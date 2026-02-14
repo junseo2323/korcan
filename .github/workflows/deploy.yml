@@ -112,7 +112,7 @@ jobs:
             fi
 
             # Ensure NEXTAUTH_URL is correct
-            sed -i 's|NEXTAUTH_URL=.*|NEXTAUTH_URL="http://korcan-test.duckdns.org"|g' .env
+            sed -i 's|NEXTAUTH_URL=.*|NEXTAUTH_URL="https://korcan.cc"|g' .env
 
             # Restart containers
             sudo docker compose -f docker-compose.prod.yml up -d

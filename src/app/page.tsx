@@ -3,6 +3,8 @@
 import React, { useEffect, useState } from 'react'
 import styled from 'styled-components'
 import { GridContainer, FullWidthBlock, TimezoneBlock, PopularPostsBlock, TodayScheduleBlock, AdBlock, MonthlyExpenseBlock } from '@/components/home/HomeWidgets'
+import MeetupRecommendationBlock from '@/components/home/MeetupRecommendationBlock'
+import PropertyRecommendationBlock from '@/components/home/PropertyRecommendationBlock'
 
 const Header = styled.div`
   padding: 1.5rem 1.5rem 0.5rem 1.5rem;
@@ -54,9 +56,19 @@ export default function Home() {
         <TodayScheduleBlock count={data?.incompleteTodosCount || 0} userName={data?.user?.name} />
         <MonthlyExpenseBlock expenses={data?.monthlyExpenses || { CAD: 0, KRW: 0 }} />
 
-        {/* Row 3: Ad (Full Width for visual break) -> Actually User requested Ad "Block". Let's put it at bottom or as full width */}
+        {/* Meetup Recommendations */}
+        <FullWidthBlock>
+          <MeetupRecommendationBlock meetups={data?.recentMeetups || []} />
+        </FullWidthBlock>
+
+        {/* Row 3: Ad (Full Width for visual break) */}
         <FullWidthBlock>
           <AdBlock />
+        </FullWidthBlock>
+
+        {/* Property Recommendations */}
+        <FullWidthBlock>
+          <PropertyRecommendationBlock properties={data?.recentProperties || []} />
         </FullWidthBlock>
 
         {/* Row 4: Popular Posts (Full Width) */}

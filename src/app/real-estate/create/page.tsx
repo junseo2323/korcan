@@ -378,7 +378,7 @@ function CreatePropertyFormContent({ state, session, router }: any) {
 
             if (res.ok) {
                 toast.success("매물이 등록되었습니다.")
-                router.push('/real-estate')
+                router.push('/market?tab=REAL_ESTATE')
             } else {
                 throw new Error("Registration failed")
             }

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import styled from 'styled-components'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useMarket } from '@/contexts/MarketContext'
 import { Plus, Heart, Map as MapIcon, Grid } from 'lucide-react'
 import PropertyMap from '@/components/real-estate/PropertyMap'
@@ -175,10 +175,20 @@ const Meta = styled.div`
   margin-top: 0.5rem;
 `
 
-export default function MarketPage() {
+import { Suspense } from 'react'
+
+// ... imports remain the same
+
+// ... styled components remain the same
+
+function MarketPageContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { products } = useMarket()
-  const [activeTab, setActiveTab] = useState<'PRODUCTS' | 'REAL_ESTATE'>('PRODUCTS')
+
+  // Initialize activeTab based on URL query param
+  const initialTab = searchParams?.get('tab') === 'REAL_ESTATE' ? 'REAL_ESTATE' : 'PRODUCTS'
+  const [activeTab, setActiveTab] = useState<'PRODUCTS' | 'REAL_ESTATE'>(initialTab)
 
   // Real Estate State
   const [properties, setProperties] = useState<any[]>([])
@@ -300,5 +310,13 @@ export default function MarketPage() {
         )}
       </ContentArea>
     </Container>
+  )
+}
+
+export default function MarketPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <MarketPageContent />
+    </Suspense>
   )
 }

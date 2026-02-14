@@ -60,9 +60,7 @@ const BlockContent = styled.div`
 const TimeDisplay = styled.div`
   display: flex;
   flex-direction: column;
-  margin-bottom: 1rem;
-  
-  &:last-child { margin-bottom: 0; }
+  justify-content: center;
 `
 
 const TimeLabel = styled.div`
@@ -352,27 +350,21 @@ import { useCurrency } from '@/contexts/CurrencyContext'
 export function MonthlyExpenseBlock({ expenses }: { expenses: { CAD: number, KRW: number } }) {
     const { exchangeRate } = useCurrency()
 
-    // User wants to see CAD amount and its KRW equivalent
+    // User wants to see CAD amount dominant, KRW sub
     const cadAmount = expenses?.CAD || 0
     const convertedKRW = cadAmount * exchangeRate
-
-    const cadText = `$${cadAmount.toLocaleString()}`
-    const krwText = `≈ ₩${Math.round(convertedKRW).toLocaleString()}`
 
     return (
         <BlockBase>
             <BlockTitle><PieChart size={16} /> 이번 달 지출</BlockTitle>
             <BlockContent style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                <ExpenseRow>
-                    <CurrencyLabel>CAD</CurrencyLabel>
-                    <ExpenseAmount $length={cadText.length}>{cadText}</ExpenseAmount>
-                </ExpenseRow>
-                <ExpenseRow>
-                    <CurrencyLabel>KRW (환산)</CurrencyLabel>
-                    <ConvertedAmount $length={krwText.length}>{krwText}</ConvertedAmount>
-                </ExpenseRow>
-                <div style={{ marginTop: '0.75rem', fontSize: '0.75rem', color: '#9ca3af', textAlign: 'right' }}>
-                    환율: 1 CAD = {exchangeRate.toFixed(2)} KRW
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                    <span style={{ fontSize: '1.5rem', fontWeight: 800, color: '#2563EB' }}>
+                        ${cadAmount.toLocaleString()} <span style={{ fontSize: '1rem', fontWeight: 600, color: '#6B7280' }}>CAD</span>
+                    </span>
+                    <span style={{ fontSize: '0.9rem', color: '#9CA3AF', fontWeight: 500 }}>
+                        ₩ {Math.round(convertedKRW).toLocaleString()}
+                    </span>
                 </div>
             </BlockContent>
             <LinkButton href="/expenses">

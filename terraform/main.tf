@@ -127,8 +127,65 @@ resource "aws_s3_bucket_policy" "uploads_policy" {
       },
     ]
   })
+
+  depends_on = [aws_s3_bucket_public_access_block.uploads_public]
 }
 
 output "s3_bucket_name" {
   value = aws_s3_bucket.uploads.bucket
+}
+
+# --- 6. RDS Security Group ---
+resource "aws_security_group" "rds_sg" {
+  name        = "korcan-rds-sg"
+  description = "Allow PostgreSQL inbound traffic"
+
+  ingress {
+    description = "PostgreSQL from anywhere"
+    from_port   = 5432
+    to_port     = 5432
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"] # Allowing public access for dev/migration convenience
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+# --- 7. Random Password for DB ---
+resource "random_password" "db_password" {
+  length           = 16
+  special          = false # Simpler for connection strings
+}
+
+# --- 8. RDS Instance ---
+resource "aws_db_instance" "default" {
+  allocated_storage    = 20
+  db_name              = "korcandb"
+  engine               = "postgres"
+  engine_version       = "16"
+  instance_class       = "db.t3.micro"
+  username             = "postgres"
+  password             = random_password.db_password.result
+  parameter_group_name = "default.postgres16"
+  skip_final_snapshot  = true
+  publicly_accessible  = true
+  vpc_security_group_ids = [aws_security_group.rds_sg.id]
+
+  tags = {
+    Name = "KorCan-RDS"
+  }
+}
+
+output "rds_endpoint" {
+  value = aws_db_instance.default.endpoint
+}
+
+output "db_password" {
+  value     = random_password.db_password.result
+  sensitive = true
 }

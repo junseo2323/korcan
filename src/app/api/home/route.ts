@@ -129,6 +129,40 @@ export async function GET(req: Request) {
             })
         }
 
+
+        // 4. Recent Meetups (Top 4)
+        const recentMeetups = await prisma.meetup.findMany({
+            take: 4,
+            orderBy: { createdAt: 'desc' },
+            select: {
+                id: true,
+                title: true,
+                date: true,
+                region: true,
+                maxMembers: true,
+                currentMembers: true,
+                image: true
+            }
+        })
+
+
+        // 5. Recent Properties (Top 4)
+        const recentProperties = await prisma.property.findMany({
+            take: 4,
+            orderBy: { createdAt: 'desc' },
+            select: {
+                id: true,
+                title: true,
+                price: true,
+                currency: true,
+                type: true,
+                images: {
+                    take: 1,
+                    select: { url: true }
+                }
+            }
+        })
+
         return NextResponse.json({
             user: session?.user ? { name: userName, image: session.user.image } : null,
             popularPosts: popularPosts.map(p => ({
@@ -139,7 +173,24 @@ export async function GET(req: Request) {
                 comments: p._count.comments
             })),
             incompleteTodosCount,
-            monthlyExpenses
+            monthlyExpenses,
+            recentMeetups: recentMeetups.map(m => ({
+                id: m.id,
+                title: m.title,
+                date: m.date,
+                region: m.region,
+                currentMembers: m.currentMembers,
+                maxMembers: m.maxMembers,
+                image: m.image
+            })),
+            recentProperties: recentProperties.map(p => ({
+                id: p.id,
+                title: p.title,
+                price: p.price,
+                currency: p.currency,
+                type: p.type,
+                imageUrl: p.images[0]?.url || ''
+            }))
         })
 
     } catch (e) {
@@ -147,3 +198,4 @@ export async function GET(req: Request) {
         return NextResponse.json({ error: 'Failed to fetch home data' }, { status: 500 })
     }
 }
+
