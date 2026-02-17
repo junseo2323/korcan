@@ -35,6 +35,7 @@ interface PostContextType {
     refreshPosts: () => void
     addPost: (title: string, content: string, category?: string, region?: string, meetupData?: any, images?: string[]) => Promise<void>
     updatePost: (id: string, updates: Partial<Post>) => void
+    deletePost: (id: string) => Promise<void>
     selectedRegion: string
     setSelectedRegion: (region: string) => void
 }
@@ -90,6 +91,20 @@ export function PostProvider({ children }: { children: React.ReactNode }) {
         }
     }
 
+    const deletePost = async (id: string) => {
+        try {
+            const res = await fetch(`/api/posts/${id}`, { method: 'DELETE' })
+            if (res.ok) {
+                setPosts(prev => prev.filter(post => post.id !== id))
+            } else {
+                throw new Error('Failed to delete post')
+            }
+        } catch (e) {
+            console.error(e)
+            throw e
+        }
+    }
+
     const updatePost = (id: string, updates: Partial<Post>) => {
         setPosts(prev => prev.map(post =>
             post.id === id ? { ...post, ...updates } : post
@@ -97,7 +112,7 @@ export function PostProvider({ children }: { children: React.ReactNode }) {
     }
 
     return (
-        <PostContext.Provider value={{ posts, refreshPosts, addPost, updatePost, selectedRegion, setSelectedRegion }}>
+        <PostContext.Provider value={{ posts, refreshPosts, addPost, updatePost, deletePost, selectedRegion, setSelectedRegion }}>
             {children}
         </PostContext.Provider>
     )

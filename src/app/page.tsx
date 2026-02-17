@@ -1,50 +1,146 @@
-'use client'
-
-import React, { useEffect, useState } from 'react'
-import styled from 'styled-components'
-import { GridContainer, FullWidthBlock, TimezoneBlock, PopularPostsBlock, TodayScheduleBlock, AdBlock, MonthlyExpenseBlock } from '@/components/home/HomeWidgets'
+import React from 'react'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
+import { prisma } from '@/lib/prisma'
+import { GridContainer, FullWidthBlock, TimezoneBlock, PopularPostsBlock, TodayScheduleBlock, AdBlock, MonthlyExpenseBlock, SupportersAdBlock } from '@/components/home/HomeWidgets'
 import MeetupRecommendationBlock from '@/components/home/MeetupRecommendationBlock'
 import PropertyRecommendationBlock from '@/components/home/PropertyRecommendationBlock'
+import Link from 'next/link'
 
-const Header = styled.div`
-  padding: 1.5rem 1.5rem 0.5rem 1.5rem;
-`
+async function getData() {
+  const session = await getServerSession(authOptions)
 
-const Greeting = styled.h1`
-  font-size: 1.75rem;
-  font-weight: 800;
-  color: ${({ theme }) => theme.colors.text.primary};
-  margin-bottom: 0.25rem;
-`
+  // Defaults
+  const today = new Date()
+  const startOfDay = new Date(today.setHours(0, 0, 0, 0))
+  const endOfDay = new Date(today.setHours(23, 59, 59, 999))
 
-const SubGreeting = styled.p`
-  font-size: 1rem;
-  color: ${({ theme }) => theme.colors.text.secondary};
-`
+  // 1. Popular Posts (Top 5)
+  const popularPosts = await prisma.post.findMany({
+    take: 5,
+    orderBy: { likes: { _count: 'desc' } },
+    include: {
+      _count: { select: { likes: true, comments: true } }
+    }
+  })
 
-export default function Home() {
-  const [data, setData] = useState<any>(null)
+  // 2. Recent Meetups
+  const recentMeetups = await prisma.meetup.findMany({
+    take: 4,
+    orderBy: { createdAt: 'desc' },
+    select: {
+      id: true, title: true, date: true, region: true,
+      maxMembers: true, currentMembers: true, image: true
+    }
+  })
 
-  useEffect(() => {
-    // Get client's local date YYYY-MM-DD
-    const today = new Date()
-    const year = today.getFullYear()
-    const month = String(today.getMonth() + 1).padStart(2, '0')
-    const day = String(today.getDate()).padStart(2, '0')
-    const dateStr = `${year}-${month}-${day}`
+  // 3. Recent Properties
+  const recentProperties = await prisma.property.findMany({
+    take: 4,
+    orderBy: { createdAt: 'desc' },
+    select: {
+      id: true,
+      title: true,
+      price: true,
+      currency: true,
+      type: true,
+      images: {
+        take: 1,
+        select: { url: true }
+      }
+    }
+  })
 
-    fetch(`/api/home?date=${dateStr}`)
-      .then(res => res.json())
-      .then(setData)
-      .catch(console.error)
-  }, [])
+  // 4. Supporters Post
+  const supportersPost = await prisma.post.findFirst({
+    where: {
+      title: { contains: 'KorCan 서포터즈' },
+      user: { role: 'ADMIN' }
+    },
+    select: { id: true }
+  })
+
+  let incompleteTodosCount = 0
+  let monthlyExpenses = { CAD: 0, KRW: 0 }
+  let userName = ''
+
+  if (session?.user?.id) {
+    userName = session.user.name || '사용자'
+
+    // Todos
+    incompleteTodosCount = await prisma.todo.count({
+      where: {
+        userId: session.user.id,
+        isCompleted: false,
+        date: { gte: startOfDay, lte: endOfDay }
+      }
+    })
+
+    // Expenses (This Month)
+    const now = new Date()
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59)
+
+    const expenses = await prisma.expense.groupBy({
+      by: ['currency'],
+      _sum: { amount: true },
+      where: {
+        userId: session.user.id,
+        date: { gte: startOfMonth, lte: endOfMonth }
+      }
+    })
+
+    expenses.forEach(e => {
+      if (e.currency === 'CAD') monthlyExpenses.CAD = e._sum.amount || 0
+      if (e.currency === 'KRW') monthlyExpenses.KRW = e._sum.amount || 0
+    })
+  }
+
+  return {
+    user: session?.user ? { name: userName } : null,
+    popularPosts: popularPosts.map(p => ({
+      id: p.id,
+      title: p.title,
+      category: p.category,
+      likes: p._count.likes,
+      comments: p._count.comments
+    })),
+    incompleteTodosCount,
+    monthlyExpenses,
+    recentMeetups: recentMeetups.map(m => ({
+      id: m.id,
+      title: m.title,
+      date: m.date.toISOString(),
+      region: m.region,
+      currentMembers: m.currentMembers,
+      maxMembers: m.maxMembers,
+      image: m.image
+    })),
+    recentProperties: recentProperties.map(p => ({
+      id: p.id,
+      title: p.title,
+      price: p.price,
+      currency: p.currency,
+      type: p.type,
+      imageUrl: p.images[0]?.url || ''
+    })),
+    supportersPostId: supportersPost?.id
+  }
+}
+
+export default async function Home() {
+  const data = await getData()
 
   return (
     <>
-      <Header>
-        <Greeting>안녕하세요, {data?.user?.name || '방문자'}님</Greeting>
-        <SubGreeting>오늘도 활기차게 시작해보세요!</SubGreeting>
-      </Header>
+      <div style={{ padding: '1.5rem 1.5rem 0.5rem 1.5rem' }}>
+        <h1 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '0.25rem' }}>
+          안녕하세요, {data.user?.name || '방문자'}님
+        </h1>
+        <p style={{ fontSize: '1rem', color: '#6B7280' }}>
+          오늘도 활기차게 시작해보세요!
+        </p>
+      </div>
 
       <GridContainer>
         {/* Row 1: Timezone (Full Width) */}
@@ -52,13 +148,22 @@ export default function Home() {
           <TimezoneBlock />
         </FullWidthBlock>
 
+        {/* Supporters Ad (New) */}
+        {data.supportersPostId && (
+          <FullWidthBlock>
+            <Link href={`/community/${data.supportersPostId}`} style={{ textDecoration: 'none' }}>
+              <SupportersAdBlock />
+            </Link>
+          </FullWidthBlock>
+        )}
+
         {/* Row 2: Schedule & Expense (Half Width) */}
-        <TodayScheduleBlock count={data?.incompleteTodosCount || 0} userName={data?.user?.name} />
-        <MonthlyExpenseBlock expenses={data?.monthlyExpenses || { CAD: 0, KRW: 0 }} />
+        <TodayScheduleBlock count={data.incompleteTodosCount} userName={data.user?.name || ''} />
+        <MonthlyExpenseBlock expenses={data.monthlyExpenses} />
 
         {/* Meetup Recommendations */}
         <FullWidthBlock>
-          <MeetupRecommendationBlock meetups={data?.recentMeetups || []} />
+          <MeetupRecommendationBlock meetups={data.recentMeetups} />
         </FullWidthBlock>
 
         {/* Row 3: Ad (Full Width for visual break) */}
@@ -68,12 +173,12 @@ export default function Home() {
 
         {/* Property Recommendations */}
         <FullWidthBlock>
-          <PropertyRecommendationBlock properties={data?.recentProperties || []} />
+          <PropertyRecommendationBlock properties={data.recentProperties} />
         </FullWidthBlock>
 
         {/* Row 4: Popular Posts (Full Width) */}
         <FullWidthBlock>
-          <PopularPostsBlock posts={data?.popularPosts || []} />
+          <PopularPostsBlock posts={data.popularPosts} />
         </FullWidthBlock>
       </GridContainer>
     </>

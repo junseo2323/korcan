@@ -5,6 +5,12 @@ const nextConfig: NextConfig = {
     styledComponents: true,
   },
   output: 'standalone',
+  images: {
+    remotePatterns: [
+      { protocol: 'https', hostname: 'placehold.co' },
+      { protocol: 'https', hostname: '*.amazonaws.com' },
+    ],
+  },
 };
 
 export default nextConfig;

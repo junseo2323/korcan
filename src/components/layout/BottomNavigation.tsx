@@ -55,6 +55,9 @@ export default function BottomNavigation() {
     if (href === '/market') {
       return pathname.startsWith('/market') || pathname.startsWith('/real-estate')
     }
+    if (href === '/community') {
+      return pathname.startsWith('/community')
+    }
     return pathname === href
   }
 

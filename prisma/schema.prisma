@@ -19,6 +19,7 @@ model User {
   phoneNumber   String?
   birthDate     String? // YYYY-MM-DD
   isRegistered  Boolean   @default(false)
+  role          String    @default("USER") // USER, ADMIN
   region        String? // [NEW] MVP 2
 
   accounts Account[]

@@ -178,6 +178,8 @@ const ChatInput = styled.input`
     &:focus { border-color: ${({ theme }) => theme.colors.primary}; }
 `
 
+import { toast } from 'sonner'
+
 export default function ChatPopup() {
     const { isPopupOpen, togglePopup, activeRoomId, closeChat, openChatRoom } = useChat()
     const { data: session } = useSession()
@@ -248,13 +250,13 @@ export default function ChatPopup() {
             })
             if (res.ok) {
                 setAddEmail('')
-                alert('친구가 추가되었습니다.')
+                toast.success('친구가 추가되었습니다.')
             } else {
                 const data = await res.json()
-                alert(data.error || '실패')
+                toast.error(data.error || '실패')
             }
         } catch {
-            alert('오류 발생')
+            toast.error('오류 발생')
         }
     }
 
@@ -338,7 +340,10 @@ export default function ChatPopup() {
                         <ChatInput
                             value={newMessage}
                             onChange={e => setNewMessage(e.target.value)}
-                            onKeyDown={e => e.key === 'Enter' && handleSendMessage()}
+                            onKeyDown={e => {
+                                if (e.nativeEvent.isComposing) return
+                                if (e.key === 'Enter') handleSendMessage()
+                            }}
                             placeholder="메시지 입력..."
                         />
                         <IconButton

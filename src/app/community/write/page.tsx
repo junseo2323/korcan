@@ -6,7 +6,6 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { usePosts } from '@/contexts/PostContext'
 import { useSession } from 'next-auth/react'
 import { ChevronLeft, Image as ImageIcon, Calendar, MapPin, Users } from 'lucide-react'
-import Toast from '@/components/ui/Toast'
 
 const Container = styled.div`
   display: flex;
@@ -174,10 +173,12 @@ const IconInputWrapper = styled.div`
   }
 `
 
+import { toast } from 'sonner'
+
 function WritePostContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { addPost } = usePosts()
+  const { addPost, updatePost } = usePosts()
   const { data: session } = useSession()
 
   const type = searchParams.get('type') || 'board' // 'board' | 'meetup'
@@ -193,13 +194,6 @@ function WritePostContent() {
   const [meetupDate, setMeetupDate] = useState('')
   const [maxMembers, setMaxMembers] = useState('4')
   const [meetupPlace, setMeetupPlace] = useState('')
-
-  // Toast State
-  const [toast, setToast] = useState<{ show: boolean, message: string }>({ show: false, message: '' })
-
-  const showToast = (message: string) => {
-    setToast({ show: true, message })
-  }
 
   const [scope, setScope] = useState<'Local' | 'Global'>('Local')
   const [postImages, setPostImages] = useState<File[]>([])
@@ -244,15 +238,40 @@ function WritePostContent() {
       }
     } catch (e) {
       console.error('Image upload failed', e)
-      showToast('이미지 업로드에 실패했습니다.')
+      toast.error('이미지 업로드에 실패했습니다.')
     }
     return []
   }
 
+  // Edit Mode
+  const editId = searchParams.get('id')
+
+  useEffect(() => {
+    if (editId) {
+      setLoading(true)
+      fetch(`/api/posts/${editId}`)
+        .then(res => res.json())
+        .then(data => {
+          setTitle(data.title)
+          setContent(data.content)
+          setCategory(data.category)
+          setScope(data.region === 'Global' ? 'Global' : 'Local')
+          // Load existing images if needed (complex, skipping for now or just append)
+          // If meetup, load meetup data
+          if (data.meetup) {
+            setMeetupDate(data.meetup.date)
+            setMaxMembers(data.meetup.maxMembers.toString())
+          }
+        })
+        .catch(console.error)
+        .finally(() => setLoading(false))
+    }
+  }, [editId])
+
   const handleSubmit = async () => {
     if (!title || !content) return
     if (isMeetup && (!meetupDate || !maxMembers)) {
-      showToast('날짜와 인원 수를 입력해주세요.')
+      toast.error('날짜와 인원 수를 입력해주세요.')
       return
     }
 
@@ -271,11 +290,29 @@ function WritePostContent() {
         image: uploadedImageUrls.length > 0 ? uploadedImageUrls[0] : null // Use first image as thumbnail
       } : null
 
-      // 3. Add Post with Images
-      await addPost(title, content, category, regionValue, meetupData, uploadedImageUrls)
+      if (editId) {
+        // Edit Mode
+        const res = await fetch(`/api/posts/${editId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title, content, category,
+            // Currently API only supports title, content, category. 
+            // Meetup/Images update might need extended API.
+          })
+        })
+        if (!res.ok) throw new Error('Update failed')
+
+        // Optimistic Update
+        updatePost(editId, { title, content, category })
+      } else {
+        // Create Mode
+        await addPost(title, content, category, regionValue, meetupData, uploadedImageUrls)
+      }
+
       router.back()
     } catch (e) {
-      showToast('글 작성에 실패했습니다.')
+      toast.error('글 작성/수정에 실패했습니다.')
       setLoading(false)
     }
   }
@@ -358,21 +395,6 @@ function WritePostContent() {
                 </IconInputWrapper>
               </Section>
             </MeetupFieldRow>
-
-            {/* 
-                <Section>
-                    <Label>장소 (선택)</Label>
-                    <IconInputWrapper>
-                        <MapPin size={20} color="#9ca3af" />
-                        <Input 
-                            placeholder="모임 장소를 입력하세요 (예: 강남역 11번 출구)" 
-                            value={meetupPlace}
-                            onChange={(e) => setMeetupPlace(e.target.value)}
-                            style={{ fontSize: '0.95rem', fontWeight: 400 }}
-                        />
-                    </IconInputWrapper>
-                </Section>
-                */}
           </>
         )}
 
@@ -429,13 +451,6 @@ function WritePostContent() {
           </SubmitButton>
         </FixedButtonWrapper>
       </Form>
-
-      {toast.show && (
-        <Toast
-          message={toast.message}
-          onClose={() => setToast({ ...toast, show: false })}
-        />
-      )}
     </Container >
   )
 }

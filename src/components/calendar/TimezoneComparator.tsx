@@ -93,6 +93,8 @@ const CopyButton = styled.button`
   }
 `
 
+import { toast } from 'sonner'
+
 export default function TimezoneComparator() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
 
@@ -117,7 +119,7 @@ export default function TimezoneComparator() {
 
     const text = `Let's meet!\n🇨🇦 Toronto: ${toronto}\n🇰🇷 Seoul: ${seoul}`
     navigator.clipboard.writeText(text)
-    alert('Time copied to clipboard!')
+    toast.success('Time copied to clipboard!')
   }
 
   return (

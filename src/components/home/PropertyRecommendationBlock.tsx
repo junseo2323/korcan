@@ -2,6 +2,7 @@
 
 import React from 'react'
 import styled from 'styled-components'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { Home } from 'lucide-react'
 
@@ -60,9 +61,7 @@ const ImageWrapper = styled.div`
   position: relative;
 `
 
-const PropertyImage = styled.img`
-  width: 100%;
-  height: 100%;
+const PropertyImage = styled(Image)`
   object-fit: cover;
 `
 
@@ -118,7 +117,7 @@ export default function PropertyRecommendationBlock({ properties }: { properties
                     <Card key={property.id} onClick={() => router.push(`/real-estate/${property.id}`)}>
                         <ImageWrapper>
                             {property.imageUrl ? (
-                                <PropertyImage src={property.imageUrl} alt={property.title} />
+                                <PropertyImage src={property.imageUrl} alt={property.title} fill sizes="160px" />
                             ) : (
                                 <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af' }}>
                                     <Home size={24} />

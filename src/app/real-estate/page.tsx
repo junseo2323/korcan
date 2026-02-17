@@ -1,14 +1,11 @@
-'use client'
+import type { Metadata } from 'next'
+import { redirect } from 'next/navigation'
 
-import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+export const metadata: Metadata = {
+  title: '부동산 | KorCan',
+  description: '캐나다 한인 부동산 매물 정보',
+}
 
 export default function RealEstatePage() {
-    const router = useRouter()
-
-    useEffect(() => {
-        router.replace('/market')
-    }, [router])
-
-    return null
+  redirect('/market?tab=REAL_ESTATE')
 }

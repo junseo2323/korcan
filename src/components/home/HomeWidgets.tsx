@@ -8,7 +8,7 @@ import { toZonedTime } from 'date-fns-tz' // Need to check if this lib is instal
 // Actually date-fns-tz might not be installed. Let's use basic Intl for now or install it.
 // The user has date-fns. Standard Intl.DateTimeFormat is safer without extra install.
 import Link from 'next/link'
-import { ChevronRight, Calendar, AlertCircle, PieChart } from 'lucide-react'
+import { ChevronRight, Calendar, AlertCircle, PieChart, Megaphone } from 'lucide-react'
 
 // --- Blocks Layout Components ---
 
@@ -371,5 +371,24 @@ export function MonthlyExpenseBlock({ expenses }: { expenses: { CAD: number, KRW
                 내역 보기 <ChevronRight size={16} />
             </LinkButton>
         </BlockBase>
+    )
+}
+
+// --- Supporters Ad Widget ---
+
+const SupportersContainer = styled(AdContainer)`
+    background: linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%);
+`
+
+export function SupportersAdBlock({ onClick }: { onClick?: () => void }) {
+    return (
+        <SupportersContainer onClick={onClick}>
+            <AdBadge style={{ backgroundColor: 'rgba(255,255,255,0.2)', color: 'white' }}>RECRUITING</AdBadge>
+            <AdTitle>KorCan 서포터즈<br />모집중</AdTitle>
+            <AdDesc>함께 만들어가는<br />커뮤니티</AdDesc>
+            <div style={{ position: 'absolute', bottom: -10, right: -10, opacity: 0.2 }}>
+                <Megaphone size={80} />
+            </div>
+        </SupportersContainer>
     )
 }

@@ -35,6 +35,8 @@ interface ExpenseContextType {
 
 const ExpenseContext = createContext<ExpenseContextType | undefined>(undefined)
 
+import { toast } from 'sonner'
+
 export function ExpenseProvider({ children }: { children: React.ReactNode }) {
     const [expenses, setExpenses] = React.useState<Expense[]>([])
     const [recurringRules, setRecurringRules] = React.useState<RecurringRule[]>([])
@@ -91,7 +93,7 @@ export function ExpenseProvider({ children }: { children: React.ReactNode }) {
         } catch (error) {
             console.error(error)
             setExpenses(prev => prev.filter(e => e.id !== tempId))
-            alert('Failed to save expense')
+            toast.error('Failed to save expense')
         }
     }
 
@@ -105,7 +107,7 @@ export function ExpenseProvider({ children }: { children: React.ReactNode }) {
         } catch (error) {
             console.error(error)
             setExpenses(prevExpenses)
-            alert('Failed to delete expense')
+            toast.error('Failed to delete expense')
         }
     }
 
@@ -123,7 +125,7 @@ export function ExpenseProvider({ children }: { children: React.ReactNode }) {
             // Optionally sync with server response if needed
         } catch (error) {
             console.error(error)
-            alert('Failed to update expense')
+            toast.error('Failed to update expense')
             // Revert or reload? For MVP, just alert.
         }
     }
@@ -150,7 +152,7 @@ export function ExpenseProvider({ children }: { children: React.ReactNode }) {
         } catch (error) {
             console.error(error)
             setRecurringRules(prev => prev.filter(r => r.id !== tempId))
-            alert('Failed to save recurring rule')
+            toast.error('Failed to save recurring rule')
         }
     }
 
@@ -164,7 +166,7 @@ export function ExpenseProvider({ children }: { children: React.ReactNode }) {
         } catch (error) {
             console.error(error)
             setRecurringRules(prevRules)
-            alert('Failed to delete rule')
+            toast.error('Failed to delete rule')
         }
     }
 

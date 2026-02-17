@@ -41,6 +41,7 @@ export const authOptions: NextAuthOptions = {
             if (user) {
                 token.id = user.id
                 token.isRegistered = (user as any).isRegistered
+                token.role = (user as any).role
                 token.region = (user as any).region
             }
 
@@ -53,6 +54,7 @@ export const authOptions: NextAuthOptions = {
                     token.name = freshUser.name
                     token.email = freshUser.email
                     token.isRegistered = freshUser.isRegistered
+                    token.role = freshUser.role
                     token.region = freshUser.region
                 }
             }
@@ -63,6 +65,7 @@ export const authOptions: NextAuthOptions = {
             if (session?.user) {
                 session.user.id = token.id
                 session.user.isRegistered = token.isRegistered
+                session.user.role = token.role
                 session.user.region = token.region
                 session.user.name = token.name
                 session.user.email = token.email

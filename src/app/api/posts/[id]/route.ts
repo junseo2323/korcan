@@ -10,12 +10,11 @@ export async function GET(
     const { id } = await params
     const session = await getServerSession(authOptions)
 
-    // Increment views
-    // Optimistic update not needed here, just fire and forget or await
-    await prisma.post.update({
-        where: { id },
-        data: { views: { increment: 1 } }
-    })
+    // View increment moved to separate endpoint
+    // await prisma.post.update({
+    //     where: { id },
+    //     data: { views: { increment: 1 } }
+    // })
 
     const post = await prisma.post.findUnique({
         where: { id },
@@ -76,7 +75,9 @@ export async function DELETE(
         return NextResponse.json({ error: 'Post not found' }, { status: 404 })
     }
 
-    if (post.userId !== session.user.id) {
+    const isAdmin = session.user.role === 'ADMIN'
+
+    if (post.userId !== session.user.id && !isAdmin) {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
@@ -108,7 +109,9 @@ export async function PUT(
         return NextResponse.json({ error: 'Post not found' }, { status: 404 })
     }
 
-    if (post.userId !== session.user.id) {
+    const isAdmin = session.user.role === 'ADMIN'
+
+    if (post.userId !== session.user.id && !isAdmin) {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
