@@ -11,6 +11,8 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: '*.amazonaws.com' },
       { protocol: 'https', hostname: '*.kakaocdn.net' },
       { protocol: 'https', hostname: 'k.kakaocdn.net' },
+      { protocol: 'https', hostname: 'images.unsplash.com' },
+      { protocol: 'https', hostname: 'api.dicebear.com' },
     ],
   },
 };
