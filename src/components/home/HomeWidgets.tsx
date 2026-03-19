@@ -18,12 +18,21 @@ export const GridContainer = styled.div`
   gap: 1rem;
   padding: 1rem;
   padding-bottom: 80px; /* Nav space */
-  max-width: 600px;
+  max-width: 1200px; /* Originally 600px */
   margin: 0 auto;
+
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(4, 1fr);
+    padding-bottom: 2rem;
+  }
 `
 
 export const FullWidthBlock = styled.div`
   grid-column: span 2;
+
+  @media (min-width: 768px) {
+    grid-column: span 4;
+  }
 `
 
 const BlockBase = styled.div`

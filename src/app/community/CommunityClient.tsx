@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import styled from 'styled-components'
+import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { usePosts } from '@/contexts/PostContext'
 import { useSession } from 'next-auth/react'
@@ -136,13 +137,16 @@ const PostList = styled.div`
   gap: 1rem;
 `
 
-const PostCard = styled.div`
+const PostCard = styled(Link)`
+  display: block;
   background-color: white;
   padding: 1.25rem;
   border-radius: 16px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.05);
   cursor: pointer;
   transition: transform 0.1s;
+  text-decoration: none;
+  color: inherit;
 
   &:active { transform: scale(0.98); }
 `
@@ -353,7 +357,7 @@ function CommunityContent() {
             </div>
           ) : (
             filteredPosts.map(post => (
-              <PostCard key={post.id} onClick={() => router.push(`/community/${post.id}`)}>
+              <PostCard key={post.id} href={`/community/${post.id}`}>
                 <div style={{ marginBottom: '0.5rem' }}>
                   <span style={{
                     fontSize: '0.75rem',

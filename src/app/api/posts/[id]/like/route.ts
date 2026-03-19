@@ -38,6 +38,20 @@ export async function POST(
                 postId: id
             }
         })
+
+        // Notify post author
+        const post = await prisma.post.findUnique({ where: { id }, select: { userId: true, title: true } })
+        if (post && post.userId !== session.user.id) {
+            await prisma.notification.create({
+                data: {
+                    userId: post.userId,
+                    type: 'LIKE',
+                    message: `${session.user.name || '누군가'}님이 "${post.title.slice(0, 20)}"을 좋아합니다.`,
+                    targetUrl: `/community/${id}`,
+                },
+            })
+        }
+
         return NextResponse.json({ liked: true })
     }
 }

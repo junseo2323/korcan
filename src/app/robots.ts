@@ -6,7 +6,7 @@ export default function robots(): MetadataRoute.Robots {
         rules: {
             userAgent: '*',
             allow: '/',
-            disallow: ['/api/', '/admin/', '/my/'],
+            disallow: ['/api/', '/admin/', '/my/', '/login', '/register', '/community/write', '/market/sell'],
         },
         sitemap: 'https://korcan.cc/sitemap.xml',
     }

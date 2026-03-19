@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import styled from 'styled-components'
 import Image from 'next/image'
+import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useMarket } from '@/contexts/MarketContext'
 import { Plus, Heart, Map as MapIcon, Grid } from 'lucide-react'
@@ -110,7 +111,7 @@ const ListSection = styled.div`
 `
 
 // --- Product Components ---
-const ProductCardWrapper = styled.div`
+const ProductCardWrapper = styled(Link)`
   background-color: white;
   border-radius: 12px;
   overflow: hidden;
@@ -118,6 +119,8 @@ const ProductCardWrapper = styled.div`
   cursor: pointer;
   display: flex;
   flex-direction: column;
+  text-decoration: none;
+  color: inherit;
 `
 
 const ImageWrapper = styled.div`
@@ -256,7 +259,7 @@ function MarketPageContent() {
           <ScrollableGrid>
             <ProductGrid>
               {products.map(product => (
-                <ProductCardWrapper key={product.id} onClick={() => router.push(`/market/${product.id}`)}>
+                <ProductCardWrapper key={product.id} href={`/market/${product.id}`}>
                   <ImageWrapper>
                     <ProductImage src={product.imageUrl || 'https://placehold.co/400/png?text=No+Image'} alt={product.title} fill sizes="(max-width: 768px) 50vw, 33vw" />
                     {product.status !== 'SELLING' && (
@@ -296,11 +299,12 @@ function MarketPageContent() {
               ) : (
                 properties.map(property => (
                   <div key={property.id} id={`property-${property.id}`}>
-                    <PropertyCard
-                      property={property}
-                      selected={selectedId === property.id}
-                      onClick={() => router.push(`/real-estate/${property.id}`)}
-                    />
+                    <Link href={`/real-estate/${property.id}`} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
+                      <PropertyCard
+                        property={property}
+                        selected={selectedId === property.id}
+                      />
+                    </Link>
                   </div>
                 ))
               )}

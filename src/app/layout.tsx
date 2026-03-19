@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     icon: '/favicon.ico', // Ensure this exists or use text
   },
   alternates: {
-    canonical: './',
+    canonical: 'https://korcan.cc',
   },
   robots: { index: true, follow: true },
 }
@@ -45,7 +45,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
+    <html lang="ko">
       <body>
         <StyledComponentsRegistry>
           <Providers>

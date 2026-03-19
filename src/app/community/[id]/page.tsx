@@ -32,6 +32,7 @@ export async function generateMetadata(
   return {
     title: post.title,
     description: post.content.slice(0, 160).replace(/\n/g, ' '),
+    alternates: { canonical: `https://korcan.cc/community/${id}` },
     openGraph: {
       title: post.title,
       description: post.content.slice(0, 160).replace(/\n/g, ' '),

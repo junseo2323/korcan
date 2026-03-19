@@ -7,6 +7,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { usePosts } from '@/contexts/PostContext'
 import { useChat } from '@/contexts/ChatContext'
 import { ChevronLeft, ThumbsUp, MessageCircle, Send } from 'lucide-react'
+import Image from 'next/image'
 import ConfirmModal from '@/components/ui/ConfirmModal'
 import { toast } from 'sonner'
 import { useSession } from 'next-auth/react'
@@ -366,7 +367,7 @@ export default function PostClient() {
                             <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                                 {post.meetup.participants.map((p: any) => (
                                     <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: '4px', backgroundColor: 'white', padding: '4px 8px', borderRadius: '100px', border: '1px solid #e2e8f0' }}>
-                                        <img src={p.image || '/placeholder-user.svg'} style={{ width: '20px', height: '20px', borderRadius: '50%' }} />
+                                        <Image src={p.image || '/placeholder-user.svg'} alt={p.name || '참가자'} width={20} height={20} style={{ borderRadius: '50%' }} />
                                         <span style={{ fontSize: '0.8rem' }}>{p.name}</span>
                                     </div>
                                 ))}

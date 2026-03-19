@@ -19,6 +19,10 @@ const NavContainer = styled.nav`
   align-items: center;
   padding-bottom: env(safe-area-inset-bottom); /* iOS safe area */
   z-index: 1000;
+
+  @media (min-width: 768px) {
+    display: none;
+  }
 `
 
 const NavItem = styled(Link) <{ $active: boolean }>`

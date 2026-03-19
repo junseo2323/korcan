@@ -17,6 +17,7 @@ RUN \
 
 # Rebuild the source code only when needed
 FROM base AS builder
+RUN apt-get update -y && apt-get install -y openssl
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .

@@ -1,4 +1,6 @@
 
+export const dynamic = 'force-dynamic'
+
 import { MetadataRoute } from 'next'
 import { prisma } from '@/lib/prisma'
 
@@ -6,20 +8,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const baseUrl = 'https://korcan.cc'
 
     // 1. Static Routes
-    const routes = [
-        '',
-        '/community',
-        '/market',
-        '/expense',
-        '/real-estate',
-        '/login',
-        '/register',
-    ].map((route) => ({
-        url: `${baseUrl}${route}`,
-        lastModified: new Date(),
-        changeFrequency: 'daily' as const,
-        priority: 1,
-    }))
+    const routes: MetadataRoute.Sitemap = [
+        { url: baseUrl, lastModified: new Date('2026-01-01'), changeFrequency: 'daily', priority: 1.0 },
+        { url: `${baseUrl}/community`, lastModified: new Date('2026-01-01'), changeFrequency: 'daily', priority: 0.9 },
+        { url: `${baseUrl}/market`, lastModified: new Date('2026-01-01'), changeFrequency: 'daily', priority: 0.9 },
+        { url: `${baseUrl}/real-estate`, lastModified: new Date('2026-01-01'), changeFrequency: 'daily', priority: 0.9 },
+    ]
 
     // 2. Dynamic Posts (Community)
     const posts = await prisma.post.findMany({

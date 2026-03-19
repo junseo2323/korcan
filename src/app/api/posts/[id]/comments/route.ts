@@ -53,5 +53,18 @@ export async function POST(
         }
     })
 
+    // Notify post author (skip if commenter is the author)
+    const post = await prisma.post.findUnique({ where: { id }, select: { userId: true, title: true } })
+    if (post && post.userId !== session.user.id) {
+        await prisma.notification.create({
+            data: {
+                userId: post.userId,
+                type: 'COMMENT',
+                message: `${session.user.name || '누군가'}님이 "${post.title.slice(0, 20)}"에 댓글을 달았습니다.`,
+                targetUrl: `/community/${id}`,
+            },
+        })
+    }
+
     return NextResponse.json(comment)
 }

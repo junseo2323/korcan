@@ -48,6 +48,9 @@ model User {
   
   // [NEW] MVP 3
   properties Property[]
+
+  // [NEW] MVP 4
+  notifications Notification[]
 }
 
 model Friend {
@@ -317,4 +320,20 @@ model PropertyImage {
   propertyId String
   property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
   createdAt  DateTime @default(now())
+}
+
+// [NEW] MVP 4 Notification
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String   // COMMENT, LIKE, MEETUP_JOIN
+  message   String
+  targetUrl String?
+  read      Boolean  @default(false)
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, read])
 }

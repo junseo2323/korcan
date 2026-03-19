@@ -36,6 +36,7 @@ export async function generateMetadata(
   return {
     title: property.title,
     description,
+    alternates: { canonical: `https://korcan.cc/real-estate/${id}` },
     openGraph: {
       title: property.title,
       description,

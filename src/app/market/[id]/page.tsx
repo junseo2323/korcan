@@ -29,6 +29,7 @@ export async function generateMetadata(
   return {
     title: product.title,
     description: product.description.slice(0, 160).replace(/\n/g, ' '),
+    alternates: { canonical: `https://korcan.cc/market/${id}` },
     openGraph: {
       title: product.title,
       description: product.description.slice(0, 160).replace(/\n/g, ' '),

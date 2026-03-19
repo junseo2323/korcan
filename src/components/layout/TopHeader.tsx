@@ -2,9 +2,13 @@
 
 import React, { useState, useRef, useEffect } from 'react'
 import styled from 'styled-components'
-import { Bell, User, MessageCircle } from 'lucide-react'
-import { signIn, signOut, useSession } from 'next-auth/react'
+import { User, MessageCircle, Home, PieChart, Calendar, Users, ShoppingBag, Search } from 'lucide-react'
+import { signIn, useSession } from 'next-auth/react'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import Image from 'next/image'
 import ProfilePopover from './ProfilePopover'
+import NotificationBell from './NotificationBell'
 
 const HeaderContainer = styled.header`
   position: fixed;
@@ -16,9 +20,43 @@ const HeaderContainer = styled.header`
   border-bottom: 1px solid ${({ theme }) => theme.colors.border.primary};
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   padding: 0 1rem;
   z-index: 1000;
+`
+
+const HeaderInner = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 1200px;
+`
+
+const DesktopNavContainer = styled.nav`
+  display: none;
+  
+  @media (min-width: 768px) {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+  }
+`
+
+const NavItem = styled(Link) <{ $active: boolean }>`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  color: ${({ theme, $active }) =>
+    $active ? theme.colors.primary : theme.colors.text.secondary};
+  font-size: 0.95rem;
+  font-weight: ${({ $active }) => ($active ? '600' : '500')};
+  transition: color 0.2s;
+
+  &:hover {
+    color: ${({ theme }) => theme.colors.primary};
+  }
 `
 
 const Logo = styled.div`
@@ -60,9 +98,28 @@ import { useChat } from '@/contexts/ChatContext'
 
 export default function TopHeader() {
   const { data: session } = useSession()
+  const pathname = usePathname()
   const { togglePopup } = useChat()
   const [showProfile, setShowProfile] = useState(false)
   const profileRef = useRef<HTMLDivElement>(null)
+
+  const links = [
+    { href: '/', label: '홈', icon: Home },
+    { href: '/expenses', label: '가계부', icon: PieChart },
+    { href: '/calendar', label: '캘린더', icon: Calendar },
+    { href: '/community', label: '게시판', icon: Users },
+    { href: '/market', label: '장터', icon: ShoppingBag },
+  ]
+
+  const isActive = (href: string) => {
+    if (href === '/market') {
+      return pathname.startsWith('/market') || pathname.startsWith('/real-estate')
+    }
+    if (href === '/community') {
+      return pathname.startsWith('/community')
+    }
+    return pathname === href
+  }
 
   // Close popover when clicking outside
   useEffect(() => {
@@ -79,52 +136,73 @@ export default function TopHeader() {
 
   return (
     <HeaderContainer>
-      <Logo>KorCan</Logo>
-      <RightSection>
-        {session && (
-          <IconButton onClick={togglePopup} aria-label="Chat">
-            <MessageCircle size={24} strokeWidth={1.5} />
-          </IconButton>
-        )}
+      <HeaderInner>
+        <Logo>KorCan</Logo>
 
-        {session ? (
-          <PopoverWrapper ref={profileRef}>
-            <IconButton onClick={() => setShowProfile(!showProfile)} aria-label="Profile">
-              {session.user?.image ? (
-                <img
-                  src={session.user.image}
-                  alt="Profile"
-                  style={{ width: 28, height: 28, borderRadius: '50%' }}
-                />
-              ) : (
-                <User size={24} strokeWidth={1.5} />
-              )}
+        <DesktopNavContainer>
+          {links.map(({ href, label, icon: Icon }) => {
+            const active = isActive(href)
+            return (
+              <NavItem key={href} href={href} $active={active}>
+                <Icon size={18} strokeWidth={active ? 2.5 : 2} />
+                <span>{label}</span>
+              </NavItem>
+            )
+          })}
+        </DesktopNavContainer>
+
+        <RightSection>
+          <Link href="/search" aria-label="검색" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.5rem', borderRadius: '50%', color: 'inherit' }}>
+            <Search size={22} strokeWidth={1.5} />
+          </Link>
+          {session && <NotificationBell />}
+          {session && (
+            <IconButton onClick={togglePopup} aria-label="Chat">
+              <MessageCircle size={24} strokeWidth={1.5} />
             </IconButton>
-            {showProfile && (
-              <ProfilePopover
-                user={session.user || {}}
-                onClose={() => setShowProfile(false)}
-              />
-            )}
-          </PopoverWrapper>
-        ) : (
-          <button
-            onClick={() => signIn('kakao')}
-            style={{
-              backgroundColor: '#FEE500',
-              color: '#000000',
-              border: 'none',
-              padding: '6px 14px',
-              borderRadius: '6px',
-              fontWeight: 600,
-              fontSize: '0.85rem',
-              cursor: 'pointer'
-            }}
-          >
-            카카오 로그인
-          </button>
-        )}
-      </RightSection>
+          )}
+
+          {session ? (
+            <PopoverWrapper ref={profileRef}>
+              <IconButton onClick={() => setShowProfile(!showProfile)} aria-label="Profile">
+                {session.user?.image ? (
+                  <Image
+                    src={session.user.image}
+                    alt="프로필"
+                    width={28}
+                    height={28}
+                    style={{ borderRadius: '50%' }}
+                  />
+                ) : (
+                  <User size={24} strokeWidth={1.5} />
+                )}
+              </IconButton>
+              {showProfile && (
+                <ProfilePopover
+                  user={session.user || {}}
+                  onClose={() => setShowProfile(false)}
+                />
+              )}
+            </PopoverWrapper>
+          ) : (
+            <button
+              onClick={() => signIn('kakao')}
+              style={{
+                backgroundColor: '#FEE500',
+                color: '#000000',
+                border: 'none',
+                padding: '6px 14px',
+                borderRadius: '6px',
+                fontWeight: 600,
+                fontSize: '0.85rem',
+                cursor: 'pointer'
+              }}
+            >
+              카카오 로그인
+            </button>
+          )}
+        </RightSection>
+      </HeaderInner>
     </HeaderContainer>
   )
 }

@@ -9,6 +9,8 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { protocol: 'https', hostname: 'placehold.co' },
       { protocol: 'https', hostname: '*.amazonaws.com' },
+      { protocol: 'https', hostname: '*.kakaocdn.net' },
+      { protocol: 'https', hostname: 'k.kakaocdn.net' },
     ],
   },
 };
