@@ -10,6 +10,7 @@ import { ChevronLeft, Share, Heart, Trash2 } from 'lucide-react'
 import ConfirmModal from '@/components/ui/ConfirmModal'
 import Toast from '@/components/ui/Toast'
 import { useChat } from '@/contexts/ChatContext'
+import { toast } from 'sonner'
 
 const Container = styled.div`
   display: flex;
@@ -271,6 +272,22 @@ export default function ProductClient() {
         } catch (e) { showToast('오류 발생') }
     }
 
+    const handleShare = async () => {
+        const url = window.location.href
+        const text = `🛍️ ${product.category}\n💰 $${product.price.toLocaleString()}\n\n${product.description?.slice(0, 60)}${product.description?.length > 60 ? '...' : ''}\n\nKorCan 중고거래에서 확인해보세요!`
+
+        if (navigator.share) {
+            try {
+                await navigator.share({ title: product.title, text, url })
+            } catch (e) {
+                // user cancelled
+            }
+        } else {
+            await navigator.clipboard.writeText(`${product.title}\n${text}\n${url}`)
+            toast.success('링크가 복사되었습니다.')
+        }
+    }
+
     const handleStatusUpdate = async (newStatus: string) => {
         // Optimistic
         const oldStatus = product.status
@@ -304,7 +321,7 @@ export default function ProductClient() {
                         <ChevronLeft size={24} />
                     </IconButton>
                     <div style={{ display: 'flex', gap: '1rem' }}>
-                        <IconButton><Share size={20} /></IconButton>
+                        <IconButton onClick={handleShare}><Share size={20} /></IconButton>
                     </div>
                 </HeaderOverlay>
             </ImageArea>
@@ -356,7 +373,10 @@ export default function ProductClient() {
                 ) : (
                     <ChatButton
                         disabled={product.status !== 'SELLING'}
-                        onClick={() => openChatWithUser(product.sellerId)}
+                        onClick={() => {
+                            if (!session) { router.push('/login'); return }
+                            openChatWithUser(product.sellerId)
+                        }}
                     >
                         {product.status === 'SELLING' ? '채팅하기' : '거래 종료'}
                     </ChatButton>

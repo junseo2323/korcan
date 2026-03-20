@@ -162,6 +162,10 @@ export default function PostClient() {
 
     const handleLike = async () => {
         if (!post) return
+        if (!session) {
+            router.push('/login')
+            return
+        }
         // Optimistic
         const wasLiked = post.isLiked
         setPost((prev: any) => {

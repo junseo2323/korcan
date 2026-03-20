@@ -20,6 +20,14 @@ export async function middleware(req: NextRequest) {
     const isLogin = pathname.startsWith('/login')
     const isRegister = pathname.startsWith('/register')
 
+    // Public pages (no login required)
+    const PUBLIC_PATHS = ['/community', '/market']
+    const isPublicPath = PUBLIC_PATHS.some(p => pathname === p || pathname.startsWith(p + '/'))
+    if (isPublicPath) {
+        if (isAuth && !isRegistered) return NextResponse.redirect(new URL('/register', req.url))
+        return NextResponse.next()
+    }
+
     if (isLogin || isRegister) {
         if (isAuth) {
             // If logged in and registered, redirect to home

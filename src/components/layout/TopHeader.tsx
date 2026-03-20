@@ -139,7 +139,7 @@ export default function TopHeader() {
         <Logo>KorCan</Logo>
 
         <DesktopNavContainer>
-          {links.map(({ href, label, icon: Icon }) => {
+          {(session ? links : links.filter(l => l.href === '/community' || l.href === '/market')).map(({ href, label, icon: Icon }) => {
             const active = isActive(href)
             return (
               <NavItem key={href} href={href} $active={active}>

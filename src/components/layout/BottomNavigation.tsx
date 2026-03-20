@@ -4,6 +4,7 @@ import React from 'react'
 import styled from 'styled-components'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 import { Home, PieChart, Calendar, Users, ShoppingBag } from 'lucide-react'
 
 const NavContainer = styled.nav`
@@ -46,6 +47,7 @@ const NavItem = styled(Link) <{ $active: boolean }>`
 
 export default function BottomNavigation() {
   const pathname = usePathname()
+  const { data: session } = useSession()
 
   const links = [
     { href: '/', label: '홈', icon: Home },
@@ -65,9 +67,13 @@ export default function BottomNavigation() {
     return pathname === href
   }
 
+  const visibleLinks = session
+    ? links
+    : links.filter(l => l.href === '/community' || l.href === '/market')
+
   return (
     <NavContainer>
-      {links.map(({ href, label, icon: Icon }) => {
+      {visibleLinks.map(({ href, label, icon: Icon }) => {
         const active = isActive(href)
         return (
           <NavItem key={href} href={href} $active={active}>
