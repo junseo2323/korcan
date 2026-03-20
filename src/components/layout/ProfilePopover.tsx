@@ -2,8 +2,9 @@
 
 import React from 'react'
 import styled from 'styled-components'
-import { LogOut, User } from 'lucide-react'
+import { LogOut, Heart } from 'lucide-react'
 import { signOut } from 'next-auth/react'
+import Link from 'next/link'
 
 const Container = styled.div`
   position: absolute;
@@ -51,7 +52,7 @@ const Menu = styled.div`
   padding: 0.5rem;
 `
 
-const MenuItem = styled.button`
+const menuItemStyle = `
   width: 100%;
   display: flex;
   align-items: center;
@@ -61,18 +62,26 @@ const MenuItem = styled.button`
   background: none;
   border-radius: 8px;
   cursor: pointer;
-  color: ${({ theme }) => theme.colors.text.primary};
   font-size: 0.9rem;
   transition: background-color 0.2s;
+  text-decoration: none;
+  svg { width: 18px; height: 18px; }
+`
 
+const MenuItem = styled.button`
+  ${menuItemStyle}
+  color: ${({ theme }) => theme.colors.text.primary};
   &:hover {
     background-color: ${({ theme }) => theme.colors.neutral.gray100};
     color: ${({ theme }) => theme.colors.status.error};
   }
+`
 
-  svg {
-    width: 18px;
-    height: 18px;
+const MenuLink = styled(Link)`
+  ${menuItemStyle}
+  color: ${({ theme }) => theme.colors.text.primary};
+  &:hover {
+    background-color: ${({ theme }) => theme.colors.neutral.gray100};
   }
 `
 
@@ -96,6 +105,10 @@ export default function ProfilePopover({ user, onClose }: ProfilePopoverProps) {
         <UserEmail>{user.email || '이메일 없음'}</UserEmail>
       </UserInfo>
       <Menu>
+        <MenuLink href="/my/likes" onClick={onClose}>
+          <Heart size={18} />
+          찜한 매물
+        </MenuLink>
         <MenuItem onClick={() => signOut()}>
           <LogOut />
           로그아웃

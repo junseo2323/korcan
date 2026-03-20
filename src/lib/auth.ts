@@ -23,9 +23,16 @@ export const authOptions: NextAuthOptions = {
                 name: 'Dev Auto Login',
                 credentials: {},
                 async authorize() {
-                    // Return test user for development
-                    const testUser = await prisma.user.findUnique({
-                        where: { email: 'test@localhost.dev' }
+                    // Upsert test user for development
+                    const testUser = await prisma.user.upsert({
+                        where: { email: 'test@localhost.dev' },
+                        update: {},
+                        create: {
+                            email: 'test@localhost.dev',
+                            name: 'Dev User',
+                            isRegistered: true,
+                            role: 'USER',
+                        },
                     })
                     return testUser
                 }

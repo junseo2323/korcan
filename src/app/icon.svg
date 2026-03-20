@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- Background with rounded corners -->
+  <rect width="32" height="32" rx="7" fill="#3366FF"/>
+
+  <!-- Maple leaf shape (simplified) centered top -->
+  <path d="M16 4
+    L17.2 7.5 L20 6.5 L18.5 9.2 L21.5 9.5 L18.8 11.5 L20 15
+    L16 13 L12 15 L13.2 11.5 L10.5 9.5 L13.5 9.2 L12 6.5 L14.8 7.5 Z"
+    fill="white" opacity="0.9"/>
+  <!-- Maple stem -->
+  <rect x="15.2" y="14.5" width="1.6" height="2.5" fill="white" opacity="0.9"/>
+
+  <!-- "KC" text -->
+  <text x="16" y="27.5"
+    font-family="Arial, Helvetica, sans-serif"
+    font-size="9"
+    font-weight="800"
+    fill="white"
+    text-anchor="middle"
+    letter-spacing="0.5">KC</text>
+</svg>

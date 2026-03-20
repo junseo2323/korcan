@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next'
+import { GoogleAnalytics } from '@next/third-parties/google'
 import StyledComponentsRegistry from '@/lib/registry'
 import Providers from './providers'
 import Shell from '@/components/layout/Shell'
@@ -25,7 +26,8 @@ export const metadata: Metadata = {
     description: '캐나다 생활의 모든 것, KorCan에서 시작하세요.',
   },
   icons: {
-    icon: '/favicon.ico', // Ensure this exists or use text
+    icon: '/favicon.ico',
+    apple: '/apple-touch-icon.png',
   },
   alternates: {
     canonical: 'https://korcan.cc',
@@ -82,6 +84,7 @@ export default function RootLayout({
             }),
           }}
         />
+        <GoogleAnalytics gaId="G-C6LJTH0WHF" />
       </body>
     </html>
   )

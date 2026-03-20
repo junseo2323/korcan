@@ -203,10 +203,13 @@ export default function PropertyClient() {
   const { data: session } = useSession()
   const [property, setProperty] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [liked, setLiked] = useState(false)
+  const [likeLoading, setLikeLoading] = useState(false)
 
   useEffect(() => {
     if (params.id) {
       fetchProperty(params.id as string)
+      fetchLikeStatus(params.id as string)
     }
   }, [params.id])
 
@@ -223,6 +226,49 @@ export default function PropertyClient() {
       console.error(e)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchLikeStatus = async (id: string) => {
+    const res = await fetch(`/api/properties/${id}/like`)
+    if (res.ok) {
+      const data = await res.json()
+      setLiked(data.liked)
+    }
+  }
+
+  const handleLike = async () => {
+    if (!session) {
+      toast.error("로그인이 필요합니다.")
+      return
+    }
+    if (likeLoading) return
+    setLikeLoading(true)
+    try {
+      const res = await fetch(`/api/properties/${params.id}/like`, { method: 'POST' })
+      if (res.ok) {
+        const data = await res.json()
+        setLiked(data.liked)
+        toast.success(data.liked ? "찜 목록에 추가했습니다." : "찜 목록에서 제거했습니다.")
+      }
+    } catch (e) {
+      toast.error("오류가 발생했습니다.")
+    } finally {
+      setLikeLoading(false)
+    }
+  }
+
+  const handleShare = async () => {
+    const url = window.location.href
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: property?.title, url })
+      } catch (e) {
+        // user cancelled
+      }
+    } else {
+      await navigator.clipboard.writeText(url)
+      toast.success("링크가 복사되었습니다.")
     }
   }
 
@@ -245,15 +291,15 @@ export default function PropertyClient() {
       <Container>
         <div style={{ position: 'relative' }}>
           <Header>
-            <IconButton onClick={() => router.back()}>
+            <IconButton onClick={() => router.push('/market?tab=REAL_ESTATE')}>
               <ChevronLeft size={24} />
             </IconButton>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <IconButton>
+              <IconButton onClick={handleShare}>
                 <Share2 size={20} />
               </IconButton>
-              <IconButton>
-                <Heart size={20} />
+              <IconButton onClick={handleLike} disabled={likeLoading}>
+                <Heart size={20} fill={liked ? '#ef4444' : 'none'} color={liked ? '#ef4444' : 'currentColor'} />
               </IconButton>
             </div>
           </Header>
