@@ -6,7 +6,6 @@ import { User, MessageCircle, Home, PieChart, Calendar, Users, ShoppingBag, Sear
 import { signIn, useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import Image from 'next/image'
 import ProfilePopover from './ProfilePopover'
 import NotificationBell from './NotificationBell'
 
@@ -166,12 +165,13 @@ export default function TopHeader() {
             <PopoverWrapper ref={profileRef}>
               <IconButton onClick={() => setShowProfile(!showProfile)} aria-label="Profile">
                 {session.user?.image ? (
-                  <Image
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
                     src={session.user.image}
                     alt="프로필"
                     width={28}
                     height={28}
-                    style={{ borderRadius: '50%' }}
+                    style={{ borderRadius: '50%', objectFit: 'cover' }}
                   />
                 ) : (
                   <User size={24} strokeWidth={1.5} />

@@ -91,7 +91,9 @@ const Avatar = styled.div`
   position: relative;
 `
 
-const AvatarImg = styled(Image)`
+const AvatarImg = styled.img`
+  width: 100%;
+  height: 100%;
   object-fit: cover;
 `
 
@@ -310,7 +312,7 @@ export default function ProductClient() {
             <ContentArea>
                 <UserProfile>
                     <Avatar>
-                        {product.seller.image && <AvatarImg src={product.seller.image} alt={product.seller.name || ''} fill sizes="40px" />}
+                        {product.seller.image && <AvatarImg src={product.seller.image} alt={product.seller.name || ''} />}
                     </Avatar>
                     <UserInfo>
                         <UserName>{product.seller.name || '알 수 없음'}</UserName>
