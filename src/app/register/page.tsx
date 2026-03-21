@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import styled from 'styled-components'
-import Link from 'next/link'
 import Toast from '@/components/ui/Toast'
 
 const Container = styled.div`
@@ -146,6 +145,7 @@ export default function RegisterPage() {
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(false)
   const [consent, setConsent] = useState({ terms: false, privacy: false, marketing: false })
+  const [legalModal, setLegalModal] = useState<'terms' | 'privacy' | null>(null)
 
   // Toast State
   const [toast, setToast] = useState<{ show: boolean, message: string }>({ show: false, message: '' })
@@ -380,7 +380,7 @@ export default function RegisterPage() {
           />
           <span>
             <ConsentBadge $required>[필수]</ConsentBadge>
-            <Link href="/terms" target="_blank">이용약관</Link>에 동의합니다.
+            <button type="button" onClick={() => setLegalModal('terms')} style={{ background: 'none', border: 'none', padding: 0, color: '#3B82F6', textDecoration: 'underline', cursor: 'pointer', fontSize: 'inherit' }}>이용약관</button>에 동의합니다.
           </span>
         </ConsentRow>
         <ConsentRow>
@@ -391,7 +391,7 @@ export default function RegisterPage() {
           />
           <span>
             <ConsentBadge $required>[필수]</ConsentBadge>
-            <Link href="/privacy" target="_blank">개인정보 수집·이용</Link>에 동의합니다.
+            <button type="button" onClick={() => setLegalModal('privacy')} style={{ background: 'none', border: 'none', padding: 0, color: '#3B82F6', textDecoration: 'underline', cursor: 'pointer', fontSize: 'inherit' }}>개인정보 수집·이용</button>에 동의합니다.
             <br />
             <span style={{ fontSize: '0.78rem', color: '#64748b' }}>
               수집항목: 이름·이메일·전화번호·생년월일·지역 / 목적: 서비스 제공 / 보유: 탈퇴 시 삭제
@@ -421,6 +421,78 @@ export default function RegisterPage() {
           onClose={() => setToast({ ...toast, show: false })}
         />
       )}
+
+      {legalModal && (
+        <div
+          onClick={() => setLegalModal(null)}
+          style={{
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
+            zIndex: 10000, display: 'flex', alignItems: 'flex-end',
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: '#fff', width: '100%', maxHeight: '80vh',
+              borderRadius: '20px 20px 0 0', overflowY: 'auto',
+              padding: '1.5rem 1.25rem 2rem',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <strong style={{ fontSize: '1rem' }}>
+                {legalModal === 'terms' ? '이용약관' : '개인정보 처리방침'}
+              </strong>
+              <button
+                onClick={() => setLegalModal(null)}
+                style={{ background: 'none', border: 'none', fontSize: '1.25rem', cursor: 'pointer', color: '#64748b' }}
+              >✕</button>
+            </div>
+            {legalModal === 'terms' ? <TermsContent /> : <PrivacyContent />}
+          </div>
+        </div>
+      )}
     </Container>
+  )
+}
+
+function TermsContent() {
+  return (
+    <div style={{ fontSize: '0.875rem', lineHeight: 1.7, color: '#1e293b' }}>
+      <p style={{ marginBottom: '1rem' }}>KorCan(이하 "서비스")은 캐나다 한인 커뮤니티 플랫폼으로, 본 약관은 서비스 이용 조건 및 이용자와 서비스 간의 권리·의무를 규정합니다.</p>
+      <b>제1조 회원 자격</b>
+      <p>만 14세 이상이어야 가입할 수 있습니다. 타인의 정보를 도용하거나 허위 정보를 기재한 경우 이용이 제한됩니다.</p>
+      <b>제2조 금지 행위</b>
+      <p>타인 명예훼손, 음란물·혐오 표현 게시, 스팸, 불법 광고, 서비스 운영 방해 행위는 금지됩니다. 위반 시 계정 제재 또는 삭제 조치가 취해질 수 있습니다.</p>
+      <b>제3조 콘텐츠 권리</b>
+      <p>회원이 게시한 콘텐츠의 저작권은 회원 본인에게 있으며, 서비스는 운영 목적으로 비독점적으로 사용할 수 있습니다. 콘텐츠로 인한 법적 분쟁의 책임은 게시자에게 있습니다.</p>
+      <b>제4조 서비스 면책</b>
+      <p>천재지변·불가항력적 사유로 인한 중단, 이용자 귀책 장애, 회원 간 거래 분쟁에 대해 서비스는 책임지지 않습니다.</p>
+      <b>제5조 탈퇴</b>
+      <p>admin@korcan.cc로 탈퇴 요청 시 5영업일 이내 처리됩니다.</p>
+      <b>제6조 준거법</b>
+      <p>본 약관은 캐나다 온타리오 주법을 준거법으로 합니다.</p>
+      <p style={{ marginTop: '1rem', color: '#64748b', fontSize: '0.8rem' }}>시행일: 2026년 3월 21일</p>
+    </div>
+  )
+}
+
+function PrivacyContent() {
+  return (
+    <div style={{ fontSize: '0.875rem', lineHeight: 1.7, color: '#1e293b' }}>
+      <p style={{ marginBottom: '1rem' }}>KorCan은 「개인정보 보호법」 및 캐나다 PIPEDA에 따라 아래와 같이 개인정보를 처리합니다.</p>
+      <b>수집 항목</b>
+      <p>이름(닉네임), 이메일, 전화번호, 생년월일, 지역, 프로필 사진, OAuth 연결 정보(Google/Kakao)</p>
+      <b>수집 목적</b>
+      <p>회원 식별, 서비스 제공(커뮤니티·장터·채팅 등), 서비스 개선</p>
+      <b>보유 기간</b>
+      <p>회원탈퇴 시 즉시 삭제. 단, 법령에 따라 필요한 정보는 해당 기간 보존.</p>
+      <b>제3자 제공</b>
+      <p>Google(Analytics·OAuth), Kakao(OAuth), AWS(이미지 저장) — 각 서비스 약관에 따라 처리됩니다.</p>
+      <b>정보주체 권리</b>
+      <p>열람·정정·삭제·처리정지 요청 가능. admin@korcan.cc로 문의 시 5영업일 이내 처리.</p>
+      <b>개인정보보호책임자</b>
+      <p>KorCan 운영팀 · admin@korcan.cc</p>
+      <p style={{ marginTop: '1rem', color: '#64748b', fontSize: '0.8rem' }}>시행일: 2026년 3월 21일</p>
+    </div>
   )
 }
