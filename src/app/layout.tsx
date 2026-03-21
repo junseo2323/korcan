@@ -25,6 +25,7 @@ export const metadata: Metadata = {
     title: 'KorCan - 캐나다 한인 커뮤니티',
     description: '캐나다 생활의 모든 것, KorCan에서 시작하세요.',
   },
+  manifest: '/manifest.json',
   icons: {
     icon: '/favicon.ico',
     apple: '/apple-touch-icon.png',
@@ -39,6 +40,7 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
+  themeColor: '#3B82F6',
 }
 
 export default function RootLayout({

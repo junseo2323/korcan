@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { prisma } from '@/lib/prisma'
 import { authOptions } from '@/lib/auth'
+import { sendPushToUser } from '@/lib/sendPushNotification'
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
     const session = await getServerSession(authOptions)
@@ -72,6 +73,19 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
             where: { id: roomId },
             data: { lastMessageAt: new Date() }
         })
+
+        // Push to other room members (fire-and-forget)
+        const otherUserIds = room.users
+            .map(u => u.id)
+            .filter(uid => uid !== session.user.id)
+        const senderName = session.user.name || '누군가'
+        for (const uid of otherUserIds) {
+            sendPushToUser(uid, {
+                title: `${senderName}님의 메시지`,
+                body: content.length > 50 ? content.slice(0, 50) + '...' : content,
+                url: `https://korcan.cc/chat/${roomId}`,
+            }).catch(console.error)
+        }
 
         return NextResponse.json(message)
     } catch (e) {

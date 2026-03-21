@@ -51,7 +51,8 @@ model User {
   properties Property[]
 
   // [NEW] MVP 4
-  notifications Notification[]
+  notifications     Notification[]
+  pushSubscriptions PushSubscription[]
 }
 
 model Friend {
@@ -352,4 +353,18 @@ model Banner {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// PWA Push Subscriptions
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }

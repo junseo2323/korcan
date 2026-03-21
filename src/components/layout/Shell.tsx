@@ -8,6 +8,9 @@ import BottomNavigation from './BottomNavigation'
 import { Toaster } from 'sonner'
 import { ChatProvider } from '@/contexts/ChatContext'
 import ChatPopup from '@/components/chat/ChatPopup'
+import ServiceWorkerRegistrar from '@/components/pwa/ServiceWorkerRegistrar'
+import PushPermissionPrompt from '@/components/pwa/PushPermissionPrompt'
+import InstallPrompt from '@/components/pwa/InstallPrompt'
 import styled from 'styled-components'
 
 const MobileWrapper = styled.div<{ $isAuthPage: boolean }>`
@@ -36,6 +39,9 @@ export default function Shell({ children }: { children: React.ReactNode }) {
             </MobileWrapper>
             {!isAuthPage && <BottomNavigation />}
             <ChatPopup />
+            <ServiceWorkerRegistrar />
+            <PushPermissionPrompt />
+            <InstallPrompt />
             <Toaster position="top-center" />
         </ChatProvider>
     )

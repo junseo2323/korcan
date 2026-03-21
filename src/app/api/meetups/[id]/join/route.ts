@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
+import { sendPushToUser } from '@/lib/sendPushNotification'
 
 export async function POST(
     req: Request,
@@ -58,7 +59,25 @@ export async function POST(
                     }
                 })
             }
+
+            // 3. Notify organizer
+            if (meetup.organizerId !== session.user.id) {
+                await tx.notification.create({
+                    data: {
+                        userId: meetup.organizerId,
+                        type: 'MEETUP_JOIN',
+                        message: `${session.user.name || '누군가'}님이 "${meetup.title.slice(0, 20)}"에 참가했습니다.`,
+                        targetUrl: `/community/meetups/${meetupId}`,
+                    },
+                })
+            }
         })
+
+        // Push notification (fire-and-forget)
+        if (meetup.organizerId !== session.user.id) {
+            const message = `${session.user.name || '누군가'}님이 "${meetup.title.slice(0, 20)}"에 참가했습니다.`
+            sendPushToUser(meetup.organizerId, { title: 'KorCan 알림', body: message, url: `https://korcan.cc/community/meetups/${meetupId}` }).catch(console.error)
+        }
 
         return NextResponse.json({ success: true })
     } catch (error) {

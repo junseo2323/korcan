@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
+import { sendPushToUser } from '@/lib/sendPushNotification'
 
 export async function POST(
     req: Request,
@@ -42,14 +43,16 @@ export async function POST(
         // Notify post author
         const post = await prisma.post.findUnique({ where: { id }, select: { userId: true, title: true } })
         if (post && post.userId !== session.user.id) {
+            const message = `${session.user.name || '누군가'}님이 "${post.title.slice(0, 20)}"을 좋아합니다.`
             await prisma.notification.create({
                 data: {
                     userId: post.userId,
                     type: 'LIKE',
-                    message: `${session.user.name || '누군가'}님이 "${post.title.slice(0, 20)}"을 좋아합니다.`,
+                    message,
                     targetUrl: `/community/${id}`,
                 },
             })
+            sendPushToUser(post.userId, { title: 'KorCan 알림', body: message, url: `https://korcan.cc/community/${id}` }).catch(console.error)
         }
 
         return NextResponse.json({ liked: true })
