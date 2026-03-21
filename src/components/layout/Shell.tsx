@@ -11,6 +11,7 @@ import ChatPopup from '@/components/chat/ChatPopup'
 import ServiceWorkerRegistrar from '@/components/pwa/ServiceWorkerRegistrar'
 import PushPermissionPrompt from '@/components/pwa/PushPermissionPrompt'
 import InstallPrompt from '@/components/pwa/InstallPrompt'
+import InAppBrowserBanner from '@/components/pwa/InAppBrowserBanner'
 import styled from 'styled-components'
 
 const MobileWrapper = styled.div<{ $isAuthPage: boolean }>`
@@ -39,6 +40,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
             </MobileWrapper>
             {!isAuthPage && <BottomNavigation />}
             <ChatPopup />
+            <InAppBrowserBanner />
             <ServiceWorkerRegistrar />
             <PushPermissionPrompt />
             <InstallPrompt />

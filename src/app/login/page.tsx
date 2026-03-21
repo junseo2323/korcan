@@ -9,7 +9,7 @@ import { useEffect, useState } from 'react'
 function isInAppBrowser() {
   if (typeof navigator === 'undefined') return false
   const ua = navigator.userAgent
-  return /Instagram|FBAN|FBAV|FB_IAB|Twitter|Line\/|MicroMessenger|Snapchat/.test(ua)
+  return /Instagram|FBAN|FBAV|FB_IAB|FB4A|FBIOS|Threads|Twitter|TW_|Line\/|MicroMessenger|WeChat|Snapchat|TikTok|Musical\.ly|Naver|Daum|Kakaotalk|kakaostory|GSA\//.test(ua)
 }
 
 const Container = styled.div`
@@ -82,71 +82,15 @@ const GoogleButton = styled.button<{ $disabled?: boolean }>`
   }
 `
 
-const InAppBanner = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  background: #1e293b;
-  color: #fff;
-  padding: 14px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  z-index: 9999;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.3);
-`
-
-const InAppBannerText = styled.p`
-  margin: 0;
-  font-size: 0.85rem;
-  line-height: 1.5;
-  color: #cbd5e1;
-`
-
-const InAppBannerButtons = styled.div`
-  display: flex;
-  gap: 8px;
-`
-
-const OpenBrowserButton = styled.button`
-  flex: 1;
-  background: #3B82F6;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  padding: 9px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-`
-
-const DismissButton = styled.button`
-  flex: 1;
-  background: #334155;
-  color: #94a3b8;
-  border: none;
-  border-radius: 8px;
-  padding: 9px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-`
-
 export default function LoginPage() {
   const router = useRouter()
   const { data: session, status } = useSession()
   const [autoLoginAttempted, setAutoLoginAttempted] = useState(false)
   const [inApp, setInApp] = useState(false)
-  const [bannerDismissed, setBannerDismissed] = useState(false)
 
   useEffect(() => {
     setInApp(isInAppBrowser())
   }, [])
-
-  const handleOpenBrowser = () => {
-    window.location.href = `${window.location.href}?openExternalBrowser=1`
-  }
 
   // Auto-login for development
   useEffect(() => {
@@ -174,25 +118,7 @@ export default function LoginPage() {
   }
 
   return (
-    <>
-      {inApp && !bannerDismissed && (
-        <InAppBanner>
-          <InAppBannerText>
-            <strong style={{ color: '#fff' }}>인앱 브라우저 감지됨</strong><br />
-            구글 로그인은 Instagram, Facebook 등 인앱 브라우저에서 작동하지 않습니다.
-            Safari 또는 Chrome에서 열어주세요.
-          </InAppBannerText>
-          <InAppBannerButtons>
-            <OpenBrowserButton onClick={handleOpenBrowser}>
-              브라우저에서 열기
-            </OpenBrowserButton>
-            <DismissButton onClick={() => setBannerDismissed(true)}>
-              닫기
-            </DismissButton>
-          </InAppBannerButtons>
-        </InAppBanner>
-      )}
-    <Container style={{ paddingTop: inApp && !bannerDismissed ? '120px' : undefined }}>
+    <Container>
       <Logo>KorCan</Logo>
       <Description>
         캐나다 한인들을 위한<br />
@@ -219,6 +145,5 @@ export default function LoginPage() {
         카카오로 시작하기
       </KakaoButton>
     </Container>
-    </>
   )
 }
