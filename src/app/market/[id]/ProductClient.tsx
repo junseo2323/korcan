@@ -10,7 +10,7 @@ import { ChevronLeft, Share, Heart, Trash2 } from 'lucide-react'
 import ConfirmModal from '@/components/ui/ConfirmModal'
 import Toast from '@/components/ui/Toast'
 import { useChat } from '@/contexts/ChatContext'
-import { toast } from 'sonner'
+import { toast as sonnerToast } from 'sonner'
 
 const Container = styled.div`
   display: flex;
@@ -284,7 +284,7 @@ export default function ProductClient() {
             }
         } else {
             await navigator.clipboard.writeText(`${product.title}\n${text}\n${url}`)
-            toast.success('링크가 복사되었습니다.')
+            sonnerToast.success('링크가 복사되었습니다.')
         }
     }
 
