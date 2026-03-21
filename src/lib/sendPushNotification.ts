@@ -1,5 +1,5 @@
 import { prisma } from './prisma'
-import webpush from './webpush'
+import { getWebPush } from './webpush'
 
 interface PushPayload {
   title: string
@@ -16,7 +16,7 @@ export async function sendPushToUser(userId: string, payload: PushPayload) {
   await Promise.allSettled(
     subscriptions.map(async (sub) => {
       try {
-        await webpush.sendNotification(
+        await getWebPush().sendNotification(
           { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
           JSON.stringify(payload)
         )
