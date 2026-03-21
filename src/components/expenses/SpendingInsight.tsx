@@ -3,6 +3,7 @@
 import React from 'react'
 import styled from 'styled-components'
 import { Utensils, Coffee, AlertCircle, Smile } from 'lucide-react'
+import { useCurrency } from '@/contexts/CurrencyContext'
 
 const Card = styled.div`
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -79,11 +80,9 @@ interface Props {
 }
 
 export default function SpendingInsight({ totalAmount, currency }: Props) {
-    // Conversion Rates (Approx)
-    // Chicken: $30 CAD / 30,000 KRW
-    // Coffee: $5 CAD / 5,000 KRW
-
-    const amountInCAD = currency === 'CAD' ? totalAmount : totalAmount / 950
+    // Chicken: $30 CAD / Coffee: $5 CAD
+    const { exchangeRate } = useCurrency()
+    const amountInCAD = currency === 'CAD' ? totalAmount : totalAmount / (exchangeRate || 950)
 
     const chickenCount = Math.floor(amountInCAD / 30)
     const coffeeCount = Math.floor(amountInCAD / 5)

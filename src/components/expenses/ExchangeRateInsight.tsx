@@ -1,10 +1,24 @@
 'use client'
 
-import React, { useMemo } from 'react'
+import React, { useMemo, useEffect, useState } from 'react'
 import styled from 'styled-components'
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts'
 import { useCurrency } from '@/contexts/CurrencyContext'
 import { TrendingDown, TrendingUp, Minus } from 'lucide-react'
+
+async function fetchRateForDate(dateStr: string): Promise<number | null> {
+  try {
+    const res = await fetch(
+      `https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@${dateStr}/v1/currencies/cad.json`,
+      { next: { revalidate: 86400 } }
+    )
+    if (!res.ok) return null
+    const data = await res.json()
+    return data?.cad?.krw ?? null
+  } catch {
+    return null
+  }
+}
 
 const Card = styled.div`
   background-color: white;
@@ -88,24 +102,36 @@ const GraphContainer = styled.div`
 
 export default function ExchangeRateInsight() {
   const { exchangeRate } = useCurrency()
+  const [historyData, setHistoryData] = useState<{ day: string; rate: number }[]>([])
 
-  // MOCK DATA for Graph
-  const historyData = useMemo(() => {
-    const base = exchangeRate
-    // Generate last 6 days random, but ensure deviation is around the base
-    const past = Array.from({ length: 6 }, (_, i) => ({
-      day: `D-${6 - i}`,
-      rate: base + (Math.random() * 20 - 10)
-    }))
-    // Ensure Last Point is EXACTLY current rate
-    return [...past, { day: 'Today', rate: base }]
+  useEffect(() => {
+    async function loadHistory() {
+      const today = new Date()
+      const dates = Array.from({ length: 6 }, (_, i) => {
+        const d = new Date(today)
+        d.setDate(today.getDate() - (6 - i))
+        return d.toISOString().slice(0, 10)
+      })
+
+      const results = await Promise.all(dates.map(fetchRateForDate))
+
+      const past = dates.map((dateStr, i) => ({
+        day: `D-${6 - i}`,
+        rate: results[i] ?? exchangeRate,
+      }))
+
+      setHistoryData([...past, { day: 'Today', rate: exchangeRate }])
+    }
+
+    if (exchangeRate) loadHistory()
   }, [exchangeRate])
 
-  // Calculate Real 7-day Average from the data
+  // Calculate 7-day Average from real data
   const avgRate = useMemo(() => {
+    if (historyData.length === 0) return exchangeRate
     const sum = historyData.reduce((acc, curr) => acc + curr.rate, 0)
     return sum / historyData.length
-  }, [historyData])
+  }, [historyData, exchangeRate])
 
   // AI Target: Slightly below average (e.g., bottom 20% percentile logic simulated)
   const targetPrice = avgRate - 5
@@ -182,7 +208,7 @@ export default function ExchangeRateInsight() {
 
       <GraphContainer>
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={historyData}>
+          <LineChart data={historyData.length > 0 ? historyData : [{ day: 'Today', rate: exchangeRate }]}>
             <XAxis dataKey="day" hide />
             <YAxis domain={['auto', 'auto']} hide />
             <Tooltip
