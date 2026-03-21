@@ -47,18 +47,6 @@ export const authOptions: NextAuthOptions = {
     jwt: {
         maxAge: 365 * 24 * 60 * 60, // 1년
     },
-    cookies: {
-        sessionToken: {
-            name: `next-auth.session-token`,
-            options: {
-                httpOnly: true,
-                sameSite: 'lax',
-                path: '/',
-                secure: process.env.NODE_ENV === 'production',
-                maxAge: 365 * 24 * 60 * 60, // 1년 (session cookie → persistent cookie)
-            },
-        },
-    },
     callbacks: {
         async jwt({ token, user, trigger, session }) {
             // Initial sign in
