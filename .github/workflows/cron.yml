@@ -1,0 +1,16 @@
+name: Cron - Cleanup Unregistered Users
+
+on:
+  schedule:
+    - cron: '0 3 * * *' # 매일 UTC 03:00 (KST 12:00, EDT 23:00)
+  workflow_dispatch: # 수동 실행 가능
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call cleanup API
+        run: |
+          curl -s -o /dev/null -w "%{http_code}" \
+            -X POST https://korcan.cc/api/cron/cleanup-users \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
