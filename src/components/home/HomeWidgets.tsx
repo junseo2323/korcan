@@ -401,3 +401,64 @@ export function SupportersAdBlock({ onClick }: { onClick?: () => void }) {
         </SupportersContainer>
     )
 }
+
+// --- Dynamic Banner Block (DB-driven) ---
+
+interface BannerData {
+    id: string
+    title: string
+    subtitle?: string
+    linkUrl?: string
+    bgFrom: string
+    bgTo: string
+}
+
+const DynamicAdContainer = styled.a<{ $from: string; $to: string }>`
+    background: linear-gradient(135deg, ${({ $from }) => $from} 0%, ${({ $to }) => $to} 100%);
+    border-radius: 24px;
+    padding: 1.5rem;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    min-height: 140px;
+    text-decoration: none;
+    transition: opacity 0.2s;
+
+    &:active { opacity: 0.9; }
+`
+
+export function DynamicBannerBlock() {
+    const [banners, setBanners] = React.useState<BannerData[]>([])
+
+    React.useEffect(() => {
+        fetch('/api/banners').then(r => r.json()).then(data => {
+            if (Array.isArray(data)) setBanners(data)
+        }).catch(() => {})
+    }, [])
+
+    if (banners.length === 0) return null
+
+    return (
+        <>
+            {banners.map(banner => (
+                <DynamicAdContainer
+                    key={banner.id}
+                    $from={banner.bgFrom}
+                    $to={banner.bgTo}
+                    href={banner.linkUrl || '#'}
+                >
+                    <AdBadge style={{ backgroundColor: 'rgba(0,0,0,0.15)', color: 'white' }}>AD</AdBadge>
+                    <AdTitle>{banner.title}</AdTitle>
+                    {banner.subtitle && <AdDesc>{banner.subtitle}</AdDesc>}
+                    <div style={{ position: 'absolute', bottom: -10, right: -10, opacity: 0.15 }}>
+                        <Megaphone size={80} />
+                    </div>
+                </DynamicAdContainer>
+            ))}
+        </>
+    )
+}

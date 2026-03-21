@@ -46,10 +46,11 @@ const Badge = styled.span`
 `
 
 const Dropdown = styled.div`
-  position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
+  position: fixed;
+  top: 60px;
+  right: 0.5rem;
   width: 320px;
+  max-width: calc(100vw - 1rem);
   background: white;
   border: 1px solid ${({ theme }) => theme.colors.border.primary};
   border-radius: 16px;

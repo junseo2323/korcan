@@ -260,14 +260,17 @@ export default function PropertyClient() {
 
   const handleShare = async () => {
     const url = window.location.href
+    const priceStr = `${property.currency === 'CAD' ? '$' : '₩'}${property.price.toLocaleString()}/월`
+    const text = `🏠 ${property.type} · ${priceStr}\n🛏 ${property.bedrooms}bed · 🚿 ${property.bathrooms}bath\n📍 ${property.address}\n\nKorCan에서 매물을 확인해보세요!`
+
     if (navigator.share) {
       try {
-        await navigator.share({ title: property?.title, url })
+        await navigator.share({ title: property.title, text, url })
       } catch (e) {
         // user cancelled
       }
     } else {
-      await navigator.clipboard.writeText(url)
+      await navigator.clipboard.writeText(`${property.title}\n${text}\n${url}`)
       toast.success("링크가 복사되었습니다.")
     }
   }

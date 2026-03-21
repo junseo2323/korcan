@@ -2,7 +2,7 @@ import React from 'react'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { GridContainer, FullWidthBlock, TimezoneBlock, PopularPostsBlock, TodayScheduleBlock, AdBlock, MonthlyExpenseBlock, SupportersAdBlock } from '@/components/home/HomeWidgets'
+import { GridContainer, FullWidthBlock, TimezoneBlock, PopularPostsBlock, TodayScheduleBlock, AdBlock, MonthlyExpenseBlock, SupportersAdBlock, DynamicBannerBlock } from '@/components/home/HomeWidgets'
 import MeetupRecommendationBlock from '@/components/home/MeetupRecommendationBlock'
 import PropertyRecommendationBlock from '@/components/home/PropertyRecommendationBlock'
 import Link from 'next/link'
@@ -166,7 +166,10 @@ export default async function Home() {
           <MeetupRecommendationBlock meetups={data.recentMeetups} />
         </FullWidthBlock>
 
-        {/* Row 3: Ad (Full Width for visual break) */}
+        {/* Row 3: Dynamic Banners (DB-driven) + fallback Ad */}
+        <FullWidthBlock>
+          <DynamicBannerBlock />
+        </FullWidthBlock>
         <FullWidthBlock>
           <AdBlock />
         </FullWidthBlock>

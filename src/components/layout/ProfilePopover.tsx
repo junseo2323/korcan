@@ -7,15 +7,15 @@ import { signOut } from 'next-auth/react'
 import Link from 'next/link'
 
 const Container = styled.div`
-  position: absolute;
-  top: 100%;
-  right: 0;
-  margin-top: 0.5rem;
+  position: fixed;
+  top: 60px;
+  right: 0.5rem;
+  width: 220px;
+  max-width: calc(100vw - 1rem);
   background-color: white;
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   border: 1px solid ${({ theme }) => theme.colors.neutral.gray200};
-  width: 220px;
   overflow: hidden;
   z-index: 2000;
   animation: fadeIn 0.2s ease-out;
