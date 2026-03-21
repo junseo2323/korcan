@@ -15,30 +15,21 @@ export async function GET(req: Request) {
         ? { OR: [{ title: { contains: search, mode: 'insensitive' as const } }] }
         : {}
 
-    const [posts, total] = await Promise.all([
-        prisma.post.findMany({
+    const [products, total] = await Promise.all([
+        prisma.product.findMany({
             where,
             include: {
-                user: { select: { id: true, name: true, email: true } },
-                _count: { select: { likes: true, comments: true } },
+                seller: { select: { id: true, name: true, email: true } },
+                _count: { select: { likes: true } },
             },
             orderBy: { createdAt: 'desc' },
             skip: (page - 1) * limit,
             take: limit,
         }),
-        prisma.post.count({ where }),
+        prisma.product.count({ where }),
     ])
 
-    return NextResponse.json({ posts, total, page, pages: Math.ceil(total / limit) })
-}
-
-export async function PUT(req: Request) {
-    const auth = await requireAdmin()
-    if (auth.error) return auth.error
-
-    const { id, category } = await req.json()
-    const post = await prisma.post.update({ where: { id }, data: { category } })
-    return NextResponse.json(post)
+    return NextResponse.json({ products, total, page, pages: Math.ceil(total / limit) })
 }
 
 export async function DELETE(req: Request) {
@@ -46,6 +37,6 @@ export async function DELETE(req: Request) {
     if (auth.error) return auth.error
 
     const { id } = await req.json()
-    await prisma.post.delete({ where: { id } })
+    await prisma.product.delete({ where: { id } })
     return NextResponse.json({ success: true })
 }

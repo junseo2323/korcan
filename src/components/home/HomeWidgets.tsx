@@ -35,6 +35,18 @@ export const FullWidthBlock = styled.div`
   }
 `
 
+export const HalfWidthBlock = styled.div`
+  grid-column: span 2;
+
+  @media (min-width: 768px) {
+    grid-column: span 2;
+  }
+`
+
+export const QuarterWidthBlock = styled.div`
+  grid-column: span 1;
+`
+
 const BlockBase = styled.div`
   background-color: white;
   border-radius: 24px;

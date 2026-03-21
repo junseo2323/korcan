@@ -12,8 +12,32 @@ const PageContainer = styled.div`
   display: flex;
   flex-direction: column;
   width: 100%;
-  height: calc(100vh - 120px); /* Adjust for header/nav */
+  height: calc(100vh - 120px);
   background-color: ${({ theme }) => theme.colors.background.primary};
+
+  @media (min-width: 768px) {
+    flex-direction: row;
+    height: calc(100vh - 60px);
+  }
+`
+
+const LeftPanel = styled.div`
+  display: flex;
+  flex-direction: column;
+
+  @media (min-width: 768px) {
+    width: 420px;
+    flex-shrink: 0;
+    border-right: 1px solid ${({ theme }) => theme.colors.border.primary};
+    overflow-y: auto;
+  }
+`
+
+const RightPanel = styled.div`
+  @media (min-width: 768px) {
+    flex: 1;
+    overflow-y: auto;
+  }
 `
 
 const MonthNavigation = styled.div`
@@ -47,19 +71,23 @@ export default function CalendarPage() {
 
   return (
     <PageContainer>
-      <MonthNavigation>
-        <NavButton onClick={handlePrevMonth}><ChevronLeft size={24} /></NavButton>
-        <MonthTitle>{format(currentDate, 'yyyy년 M월')}</MonthTitle>
-        <NavButton onClick={handleNextMonth}><ChevronRight size={24} /></NavButton>
-      </MonthNavigation>
+      <LeftPanel>
+        <MonthNavigation>
+          <NavButton onClick={handlePrevMonth}><ChevronLeft size={24} /></NavButton>
+          <MonthTitle>{format(currentDate, 'yyyy년 M월')}</MonthTitle>
+          <NavButton onClick={handleNextMonth}><ChevronRight size={24} /></NavButton>
+        </MonthNavigation>
 
-      <CalendarGrid
-        currentDate={currentDate}
-        selectedDate={selectedDate}
-        onSelectDate={setSelectedDate}
-      />
+        <CalendarGrid
+          currentDate={currentDate}
+          selectedDate={selectedDate}
+          onSelectDate={setSelectedDate}
+        />
+      </LeftPanel>
 
-      <TodoListView selectedDate={selectedDate} />
+      <RightPanel>
+        <TodoListView selectedDate={selectedDate} />
+      </RightPanel>
     </PageContainer>
   )
 }

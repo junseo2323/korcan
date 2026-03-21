@@ -12,33 +12,25 @@ export async function GET(req: Request) {
     const limit = 20
 
     const where = search
-        ? { OR: [{ title: { contains: search, mode: 'insensitive' as const } }] }
+        ? { OR: [{ title: { contains: search, mode: 'insensitive' as const } }, { address: { contains: search, mode: 'insensitive' as const } }] }
         : {}
 
-    const [posts, total] = await Promise.all([
-        prisma.post.findMany({
+    const [properties, total] = await Promise.all([
+        prisma.property.findMany({
             where,
             include: {
                 user: { select: { id: true, name: true, email: true } },
-                _count: { select: { likes: true, comments: true } },
+                images: { take: 1 },
+                _count: { select: { likes: true } },
             },
             orderBy: { createdAt: 'desc' },
             skip: (page - 1) * limit,
             take: limit,
         }),
-        prisma.post.count({ where }),
+        prisma.property.count({ where }),
     ])
 
-    return NextResponse.json({ posts, total, page, pages: Math.ceil(total / limit) })
-}
-
-export async function PUT(req: Request) {
-    const auth = await requireAdmin()
-    if (auth.error) return auth.error
-
-    const { id, category } = await req.json()
-    const post = await prisma.post.update({ where: { id }, data: { category } })
-    return NextResponse.json(post)
+    return NextResponse.json({ properties, total, page, pages: Math.ceil(total / limit) })
 }
 
 export async function DELETE(req: Request) {
@@ -46,6 +38,6 @@ export async function DELETE(req: Request) {
     if (auth.error) return auth.error
 
     const { id } = await req.json()
-    await prisma.post.delete({ where: { id } })
+    await prisma.property.delete({ where: { id } })
     return NextResponse.json({ success: true })
 }

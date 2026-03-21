@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import styled from 'styled-components'
 import { format, startOfWeek, addDays, isSameDay, startOfMonth, endOfMonth, endOfWeek, isSameMonth } from 'date-fns'
 import { ko } from 'date-fns/locale'
@@ -79,9 +79,13 @@ const ToggleButton = styled.button`
   color: ${({ theme }) => theme.colors.text.secondary};
   cursor: pointer;
   outline: none;
-  
+
   &:hover {
       color: ${({ theme }) => theme.colors.primary};
+  }
+
+  @media (min-width: 768px) {
+    display: none;
   }
 `
 
@@ -94,6 +98,10 @@ export default function WeeklyCalendarStrip({ selectedDate, onSelectDate }: Prop
   const { expenses } = useExpenses()
   const { convert, currency } = useCurrency()
   const [isExpanded, setIsExpanded] = useState(false)
+
+  useEffect(() => {
+    if (window.innerWidth >= 768) setIsExpanded(true)
+  }, [])
 
   const today = new Date()
 

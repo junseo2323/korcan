@@ -70,6 +70,11 @@ const Tab = styled.button<{ $active: boolean }>`
   border-bottom: 2px solid ${({ theme, $active }) => ($active ? theme.colors.primary : 'transparent')};
   cursor: pointer;
   transition: all 0.2s;
+
+  @media (min-width: 768px) {
+    flex: 0 0 auto;
+    padding: 0.75rem 1.5rem;
+  }
 `
 
 const ContentArea = styled.div`
@@ -90,12 +95,36 @@ const ProductGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 1rem;
+
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  @media (min-width: 1280px) {
+    grid-template-columns: repeat(5, 1fr);
+  }
 `
 
 // --- Real Estate Styles ---
+const RealEstateLayout = styled.div`
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+
+  @media (min-width: 768px) {
+    flex-direction: row;
+  }
+`
+
 const MapSection = styled.div`
-  flex: 0 0 40vh; /* Top 40% */
+  flex: 0 0 40vh;
   position: relative;
+
+  @media (min-width: 768px) {
+    flex: 1;
+    height: 100%;
+  }
 `
 
 const ListSection = styled.div`
@@ -105,9 +134,17 @@ const ListSection = styled.div`
   padding-bottom: 20px;
   border-top-left-radius: 20px;
   border-top-right-radius: 20px;
-  margin-top: -16px; /* Overlap map slightly */
+  margin-top: -16px;
   z-index: 10;
   box-shadow: 0 -4px 10px rgba(0,0,0,0.05);
+
+  @media (min-width: 768px) {
+    flex: 0 0 380px;
+    border-radius: 0;
+    margin-top: 0;
+    border-left: 1px solid #e5e7eb;
+    box-shadow: none;
+  }
 `
 
 // --- Product Components ---
@@ -281,7 +318,7 @@ function MarketPageContent() {
             </ProductGrid>
           </ScrollableGrid>
         ) : (
-          <>
+          <RealEstateLayout>
             <MapSection>
               <PropertyMap
                 properties={properties}
@@ -309,7 +346,7 @@ function MarketPageContent() {
                 ))
               )}
             </ListSection>
-          </>
+          </RealEstateLayout>
         )}
       </ContentArea>
     </Container>

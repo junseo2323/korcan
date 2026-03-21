@@ -2,10 +2,11 @@ import React from 'react'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { GridContainer, FullWidthBlock, TimezoneBlock, PopularPostsBlock, TodayScheduleBlock, AdBlock, MonthlyExpenseBlock, SupportersAdBlock, DynamicBannerBlock } from '@/components/home/HomeWidgets'
+import { GridContainer, FullWidthBlock, HalfWidthBlock, QuarterWidthBlock, TimezoneBlock, PopularPostsBlock, TodayScheduleBlock, AdBlock, MonthlyExpenseBlock, SupportersAdBlock, DynamicBannerBlock } from '@/components/home/HomeWidgets'
 import MeetupRecommendationBlock from '@/components/home/MeetupRecommendationBlock'
 import PropertyRecommendationBlock from '@/components/home/PropertyRecommendationBlock'
 import Link from 'next/link'
+import { DEFAULT_LAYOUT } from '@/app/api/admin/home-layout/route'
 
 async function getData() {
   const session = await getServerSession(authOptions)
@@ -128,12 +129,57 @@ async function getData() {
   }
 }
 
+async function getLayout() {
+  try {
+    const { prisma } = await import('@/lib/prisma')
+    const config = await prisma.siteConfig.findUnique({ where: { key: 'home_layout' } })
+    return (config?.value as typeof DEFAULT_LAYOUT) ?? DEFAULT_LAYOUT
+  } catch {
+    return DEFAULT_LAYOUT
+  }
+}
+
+function WidgetWrapper({ size, children }: { size: string; children: React.ReactNode }) {
+  if (size === 'half') return <HalfWidthBlock>{children}</HalfWidthBlock>
+  if (size === 'quarter') return <QuarterWidthBlock>{children}</QuarterWidthBlock>
+  return <FullWidthBlock>{children}</FullWidthBlock>
+}
+
 export default async function Home() {
-  const data = await getData()
+  const [data, layout] = await Promise.all([getData(), getLayout()])
+
+  const renderWidget = (key: string) => {
+    switch (key) {
+      case 'supporters':
+        return data.supportersPostId ? (
+          <Link href={`/community/${data.supportersPostId}`} style={{ textDecoration: 'none' }}>
+            <SupportersAdBlock />
+          </Link>
+        ) : null
+      case 'timezone':
+        return <TimezoneBlock />
+      case 'schedule':
+        return <TodayScheduleBlock count={data.incompleteTodosCount} userName={data.user?.name || ''} />
+      case 'expense':
+        return <MonthlyExpenseBlock expenses={data.monthlyExpenses} />
+      case 'meetup':
+        return <MeetupRecommendationBlock meetups={data.recentMeetups} />
+      case 'popular_posts':
+        return <PopularPostsBlock posts={data.popularPosts} />
+      case 'banner':
+        return <DynamicBannerBlock />
+      case 'property':
+        return <PropertyRecommendationBlock properties={data.recentProperties} />
+      case 'ad':
+        return <AdBlock />
+      default:
+        return null
+    }
+  }
 
   return (
     <>
-      <div style={{ padding: '1.5rem 1.5rem 0.5rem 1.5rem' }}>
+      <div style={{ padding: '1.5rem 1.5rem 0.5rem 1.5rem', maxWidth: '1200px', margin: '0 auto', width: '100%' }}>
         <h1 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '0.25rem' }}>
           안녕하세요, {data.user?.name || '방문자'}님
         </h1>
@@ -143,46 +189,17 @@ export default async function Home() {
       </div>
 
       <GridContainer>
-        {/* Row 1: Timezone (Full Width) */}
-        <FullWidthBlock>
-          <TimezoneBlock />
-        </FullWidthBlock>
-
-        {/* Supporters Ad (New) */}
-        {data.supportersPostId && (
-          <FullWidthBlock>
-            <Link href={`/community/${data.supportersPostId}`} style={{ textDecoration: 'none' }}>
-              <SupportersAdBlock />
-            </Link>
-          </FullWidthBlock>
-        )}
-
-        {/* Row 2: Schedule & Expense (Half Width) */}
-        <TodayScheduleBlock count={data.incompleteTodosCount} userName={data.user?.name || ''} />
-        <MonthlyExpenseBlock expenses={data.monthlyExpenses} />
-
-        {/* Meetup Recommendations */}
-        <FullWidthBlock>
-          <MeetupRecommendationBlock meetups={data.recentMeetups} />
-        </FullWidthBlock>
-
-        {/* Row 3: Dynamic Banners (DB-driven) + fallback Ad */}
-        <FullWidthBlock>
-          <DynamicBannerBlock />
-        </FullWidthBlock>
-        <FullWidthBlock>
-          <AdBlock />
-        </FullWidthBlock>
-
-        {/* Property Recommendations */}
-        <FullWidthBlock>
-          <PropertyRecommendationBlock properties={data.recentProperties} />
-        </FullWidthBlock>
-
-        {/* Row 4: Popular Posts (Full Width) */}
-        <FullWidthBlock>
-          <PopularPostsBlock posts={data.popularPosts} />
-        </FullWidthBlock>
+        {layout
+          .filter(w => w.visible)
+          .map(w => {
+            const content = renderWidget(w.key)
+            if (!content) return null
+            return (
+              <WidgetWrapper key={w.key} size={w.size}>
+                {content}
+              </WidgetWrapper>
+            )
+          })}
       </GridContainer>
     </>
   )

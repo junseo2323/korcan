@@ -4,14 +4,15 @@ import React, { useState } from 'react'
 import styled from 'styled-components'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Users, FileText, MessageSquare, Megaphone, Menu, X, ChevronRight } from 'lucide-react'
+import { LayoutDashboard, Users, FileText, MessageSquare, Megaphone, LayoutGrid, Menu, X, ChevronRight } from 'lucide-react'
 
 const navItems = [
     { href: '/admin', label: '개요', icon: LayoutDashboard, exact: true },
     { href: '/admin/users', label: '사용자', icon: Users },
-    { href: '/admin/posts', label: '게시물', icon: FileText },
+    { href: '/admin/posts', label: '콘텐츠 관리', icon: FileText },
     { href: '/admin/chats', label: '채팅 내역', icon: MessageSquare },
     { href: '/admin/banners', label: '배너 관리', icon: Megaphone },
+    { href: '/admin/home-layout', label: '홈 레이아웃', icon: LayoutGrid },
 ]
 
 const Shell = styled.div`
