@@ -8,6 +8,7 @@ export interface Post {
     title: string
     content: string
     category: string
+    region: string | null
     views: number
     userId: string
     user: {
