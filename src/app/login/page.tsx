@@ -1,15 +1,22 @@
 'use client'
 
 import { signIn, useSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import styled from 'styled-components'
 import { MessageCircle } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 
 function isInAppBrowser() {
   if (typeof navigator === 'undefined') return false
   const ua = navigator.userAgent
-  return /Instagram|FBAN|FBAV|FB_IAB|FB4A|FBIOS|Threads|Twitter|TW_|Line\/|MicroMessenger|WeChat|Snapchat|TikTok|Musical\.ly|Naver|Daum|Kakaotalk|kakaostory|GSA\//.test(ua)
+  return /Instagram|FBAN|FBAV|FB_IAB|FB4A|FBIOS|Threads|Twitter|TW_|Line\/|MicroMessenger|WeChat|Snapchat|TikTok|Musical\.ly|Naver|Daum|Kakaotalk|kakaostory/.test(ua)
+}
+
+const ERROR_MESSAGES: Record<string, string> = {
+  OAuthAccountNotLinked: '이미 다른 방법으로 가입된 이메일입니다. 카카오로 로그인해보세요.',
+  AccessDenied: '로그인이 취소됐습니다.',
+  OAuthCallbackError: '로그인 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
+  OAuthSignin: '로그인 요청에 실패했습니다. 잠시 후 다시 시도해주세요.',
 }
 
 const Container = styled.div`
@@ -83,10 +90,22 @@ const GoogleButton = styled.button<{ $disabled?: boolean }>`
 `
 
 export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginInner />
+    </Suspense>
+  )
+}
+
+function LoginInner() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { data: session, status } = useSession()
   const [autoLoginAttempted, setAutoLoginAttempted] = useState(false)
   const [inApp, setInApp] = useState(false)
+
+  const errorCode = searchParams.get('error') ?? ''
+  const errorMessage = ERROR_MESSAGES[errorCode] ?? (errorCode ? '로그인에 실패했습니다. 다시 시도해주세요.' : '')
 
   useEffect(() => {
     setInApp(isInAppBrowser())
@@ -124,6 +143,23 @@ export default function LoginPage() {
         캐나다 한인들을 위한<br />
         필수 유틸리티 & 커뮤니티
       </Description>
+
+      {errorMessage && (
+        <div style={{
+          width: '100%',
+          maxWidth: '320px',
+          backgroundColor: '#FEF2F2',
+          border: '1px solid #FECACA',
+          borderRadius: '8px',
+          padding: '0.75rem 1rem',
+          marginBottom: '1.5rem',
+          fontSize: '0.875rem',
+          color: '#B91C1C',
+          lineHeight: 1.5,
+        }}>
+          {errorMessage}
+        </div>
+      )}
 
       <GoogleButton
         $disabled={inApp}

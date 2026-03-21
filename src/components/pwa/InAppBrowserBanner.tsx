@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react'
 function isInAppBrowser() {
   if (typeof navigator === 'undefined') return false
   const ua = navigator.userAgent
-  return /Instagram|FBAN|FBAV|FB_IAB|FB4A|FBIOS|Threads|Twitter|TW_|Line\/|MicroMessenger|WeChat|Snapchat|TikTok|Musical\.ly|Naver|Daum|Kakaotalk|kakaostory|bingbot|GSA\/|YaBrowser|OPR\/|SamsungBrowser.*Mobile/.test(ua)
+  return /Instagram|FBAN|FBAV|FB_IAB|FB4A|FBIOS|Threads|Twitter|TW_|Line\/|MicroMessenger|WeChat|Snapchat|TikTok|Musical\.ly|Naver|Daum|Kakaotalk|kakaostory|bingbot|YaBrowser|OPR\/|SamsungBrowser.*Mobile/.test(ua)
 }
 
 export default function InAppBrowserBanner() {

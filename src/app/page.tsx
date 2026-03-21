@@ -1,5 +1,11 @@
+import type { Metadata } from 'next'
 import React from 'react'
 import { getServerSession } from 'next-auth'
+
+export const metadata: Metadata = {
+  title: '홈',
+  description: '캐나다 한인 커뮤니티 KorCan에서 정보를 나누고 함께 성장하세요.',
+}
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { GridContainer, FullWidthBlock, HalfWidthBlock, QuarterWidthBlock, TimezoneBlock, PopularPostsBlock, TodayScheduleBlock, AdBlock, MonthlyExpenseBlock, SupportersAdBlock, DynamicBannerBlock } from '@/components/home/HomeWidgets'
