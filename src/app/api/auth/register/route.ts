@@ -48,15 +48,21 @@ export async function PUT(req: Request) {
     }
 
     const body = await req.json()
-    const { name, email, phoneNumber, birthDate, countryCode, region } = body
+    const { name, email, phoneNumber, birthDate, countryCode, region, marketingConsent } = body
 
     if (!name || !email || !phoneNumber || !birthDate || !region) {
         return NextResponse.json({ error: 'All fields are required' }, { status: 400 })
     }
 
-    // ... (rest of validation)
+    // 만 14세 미만 가입 차단
+    const birth = new Date(birthDate)
+    const today = new Date()
+    const age = today.getFullYear() - birth.getFullYear() -
+        (today < new Date(today.getFullYear(), birth.getMonth(), birth.getDate()) ? 1 : 0)
+    if (age < 14) {
+        return NextResponse.json({ error: '만 14세 미만은 가입할 수 없습니다.' }, { status: 400 })
+    }
 
-    // ... phone number validation ...
     if (phoneNumber.length < 10) {
         return NextResponse.json({ error: 'Invalid phone number' }, { status: 400 })
     }
@@ -66,11 +72,12 @@ export async function PUT(req: Request) {
             where: { id: session.user.id },
             data: {
                 name,
-                email, // Update email if provided
-                phoneNumber, // formatting handled by frontend (e.g. "+82 010-1234-5678")
+                email,
+                phoneNumber,
                 birthDate,
                 region,
-                isRegistered: true
+                isRegistered: true,
+                marketingConsent: !!marketingConsent,
             }
         })
         return NextResponse.json(user)

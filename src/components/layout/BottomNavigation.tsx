@@ -18,7 +18,7 @@ const NavContainer = styled.nav`
   display: flex;
   justify-content: space-around;
   align-items: center;
-  padding-bottom: env(safe-area-inset-bottom); /* iOS safe area */
+  padding-bottom: calc(env(safe-area-inset-bottom) + 8px);
   z-index: 1000;
 
   @media (min-width: 768px) {
@@ -72,16 +72,30 @@ export default function BottomNavigation() {
     : links.filter(l => l.href === '/community' || l.href === '/market')
 
   return (
-    <NavContainer>
-      {visibleLinks.map(({ href, label, icon: Icon }) => {
-        const active = isActive(href)
-        return (
-          <NavItem key={href} href={href} $active={active}>
-            <Icon size={24} strokeWidth={active ? 2.5 : 2} />
-            <span>{label}</span>
-          </NavItem>
-        )
-      })}
-    </NavContainer>
+    <>
+      <NavContainer>
+        {visibleLinks.map(({ href, label, icon: Icon }) => {
+          const active = isActive(href)
+          return (
+            <NavItem key={href} href={href} $active={active}>
+              <Icon size={24} strokeWidth={active ? 2.5 : 2} />
+              <span>{label}</span>
+            </NavItem>
+          )
+        })}
+      </NavContainer>
+      <div style={{
+        textAlign: 'center',
+        paddingBottom: 'calc(60px + env(safe-area-inset-bottom) + 8px)',
+        fontSize: '0.72rem',
+        color: '#94a3b8',
+        display: 'flex',
+        justifyContent: 'center',
+        gap: '1rem',
+      }}>
+        <Link href="/privacy" style={{ color: '#94a3b8', textDecoration: 'none' }}>개인정보처리방침</Link>
+        <Link href="/terms" style={{ color: '#94a3b8', textDecoration: 'none' }}>이용약관</Link>
+      </div>
+    </>
   )
 }

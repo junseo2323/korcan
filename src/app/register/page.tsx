@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import styled from 'styled-components'
+import Link from 'next/link'
 import Toast from '@/components/ui/Toast'
 
 const Container = styled.div`
@@ -88,6 +89,47 @@ const Button = styled.button`
   }
 `
 
+const ConsentBox = styled.div`
+  margin-bottom: 1rem;
+  border: 1px solid ${({ theme }) => theme.colors.border.primary};
+  border-radius: 12px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+`
+
+const ConsentRow = styled.label`
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: ${({ theme }) => theme.colors.text.primary};
+  line-height: 1.5;
+
+  input[type='checkbox'] {
+    margin-top: 2px;
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    accent-color: ${({ theme }) => theme.colors.primary};
+    cursor: pointer;
+  }
+
+  a {
+    color: ${({ theme }) => theme.colors.primary};
+    text-decoration: underline;
+  }
+`
+
+const ConsentBadge = styled.span<{ $required?: boolean }>`
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: ${({ $required }) => ($required ? '#ef4444' : '#64748b')};
+  margin-right: 0.25rem;
+`
+
 export default function RegisterPage() {
   const { data: session, update } = useSession()
   const router = useRouter()
@@ -103,6 +145,7 @@ export default function RegisterPage() {
 
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(false)
+  const [consent, setConsent] = useState({ terms: false, privacy: false, marketing: false })
 
   // Toast State
   const [toast, setToast] = useState<{ show: boolean, message: string }>({ show: false, message: '' })
@@ -131,7 +174,15 @@ export default function RegisterPage() {
         if (code === '+1' && !PHONE_CA_REGEX.test(value)) error = '올바른 캐나다 전화번호를 입력해주세요.'
         break
       case 'birthDate':
-        if (!value) error = '생년월일을 선택해주세요.'
+        if (!value) {
+          error = '생년월일을 선택해주세요.'
+        } else {
+          const birth = new Date(value)
+          const today = new Date()
+          const age = today.getFullYear() - birth.getFullYear() -
+            (today < new Date(today.getFullYear(), birth.getMonth(), birth.getDate()) ? 1 : 0)
+          if (age < 14) error = '만 14세 미만은 가입할 수 없습니다.'
+        }
         break
       case 'region':
         if (!value) error = '지역을 선택해주세요.'
@@ -209,7 +260,8 @@ export default function RegisterPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
-          phoneNumber: fullPhoneNumber
+          phoneNumber: fullPhoneNumber,
+          marketingConsent: consent.marketing,
         })
       })
 
@@ -229,7 +281,8 @@ export default function RegisterPage() {
   }
 
   const isValid = !Object.values(errors).some(e => e) &&
-    formData.name && formData.email && formData.phoneNumber && formData.birthDate && formData.region
+    formData.name && formData.email && formData.phoneNumber && formData.birthDate && formData.region &&
+    consent.terms && consent.privacy
 
   return (
     <Container>
@@ -317,6 +370,46 @@ export default function RegisterPage() {
         </ErrorText>
         {errors.region && <ErrorText>{errors.region}</ErrorText>}
       </InputGroup>
+
+      <ConsentBox>
+        <ConsentRow>
+          <input
+            type="checkbox"
+            checked={consent.terms}
+            onChange={e => setConsent(p => ({ ...p, terms: e.target.checked }))}
+          />
+          <span>
+            <ConsentBadge $required>[필수]</ConsentBadge>
+            <Link href="/terms" target="_blank">이용약관</Link>에 동의합니다.
+          </span>
+        </ConsentRow>
+        <ConsentRow>
+          <input
+            type="checkbox"
+            checked={consent.privacy}
+            onChange={e => setConsent(p => ({ ...p, privacy: e.target.checked }))}
+          />
+          <span>
+            <ConsentBadge $required>[필수]</ConsentBadge>
+            <Link href="/privacy" target="_blank">개인정보 수집·이용</Link>에 동의합니다.
+            <br />
+            <span style={{ fontSize: '0.78rem', color: '#64748b' }}>
+              수집항목: 이름·이메일·전화번호·생년월일·지역 / 목적: 서비스 제공 / 보유: 탈퇴 시 삭제
+            </span>
+          </span>
+        </ConsentRow>
+        <ConsentRow>
+          <input
+            type="checkbox"
+            checked={consent.marketing}
+            onChange={e => setConsent(p => ({ ...p, marketing: e.target.checked }))}
+          />
+          <span>
+            <ConsentBadge>[선택]</ConsentBadge>
+            마케팅·이벤트 알림 수신에 동의합니다.
+          </span>
+        </ConsentRow>
+      </ConsentBox>
 
       <Button onClick={handleSubmit} disabled={!isValid || loading}>
         {loading ? '처리중...' : '가입 완료'}
