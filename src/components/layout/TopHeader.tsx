@@ -5,7 +5,7 @@ import styled from 'styled-components'
 import { User, MessageCircle, Home, PieChart, Calendar, Users, ShoppingBag, Search } from 'lucide-react'
 import { signIn, useSession } from 'next-auth/react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import ProfilePopover from './ProfilePopover'
 import NotificationBell from './NotificationBell'
 
@@ -98,6 +98,7 @@ import { useChat } from '@/contexts/ChatContext'
 export default function TopHeader() {
   const { data: session } = useSession()
   const pathname = usePathname()
+  const router = useRouter()
   const { togglePopup } = useChat()
   const [showProfile, setShowProfile] = useState(false)
   const profileRef = useRef<HTMLDivElement>(null)
@@ -186,10 +187,10 @@ export default function TopHeader() {
             </PopoverWrapper>
           ) : (
             <button
-              onClick={() => signIn('kakao')}
+              onClick={() => router.push('/login')}
               style={{
-                backgroundColor: '#FEE500',
-                color: '#000000',
+                backgroundColor: '#3B82F6',
+                color: '#ffffff',
                 border: 'none',
                 padding: '6px 14px',
                 borderRadius: '6px',
@@ -198,7 +199,7 @@ export default function TopHeader() {
                 cursor: 'pointer'
               }}
             >
-              카카오 로그인
+              로그인
             </button>
           )}
         </RightSection>
