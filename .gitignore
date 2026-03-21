@@ -66,3 +66,4 @@ node_modules/
 
 # Google OAuth credentials
 client_secret*.json
+CLAUDE.md
