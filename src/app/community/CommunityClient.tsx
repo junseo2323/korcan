@@ -226,14 +226,14 @@ function CommunityContent() {
     { id: 'Other', label: '그 외' },
   ]
 
-  // Fetch User Region to set default
+  // Set default region once on initial load
+  const hasSetInitialRegion = React.useRef(false)
   useEffect(() => {
-    if (session?.user?.region) {
-      if (selectedRegion === 'All') {
-        setSelectedRegion(session.user.region)
-      }
+    if (!hasSetInitialRegion.current && session?.user?.region) {
+      hasSetInitialRegion.current = true
+      setSelectedRegion(session.user.region)
     }
-  }, [session, selectedRegion, setSelectedRegion])
+  }, [session, setSelectedRegion])
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -358,7 +358,7 @@ function CommunityContent() {
           ) : (
             filteredPosts.map(post => (
               <PostCard key={post.id} href={`/community/${post.id}`}>
-                <div style={{ marginBottom: '0.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
                   <span style={{
                     fontSize: '0.75rem',
                     color: '#3b82f6',
@@ -369,6 +369,18 @@ function CommunityContent() {
                   }}>
                     {post.category || '일반'}
                   </span>
+                  {selectedRegion === 'All' && (
+                    <span style={{
+                      fontSize: '0.72rem',
+                      color: '#6b7280',
+                      backgroundColor: '#f3f4f6',
+                      padding: '2px 8px',
+                      borderRadius: '10px',
+                      fontWeight: 500
+                    }}>
+                      {post.region ? regions.find(r => r.id === post.region)?.label.split(' ')[0] || post.region : '캐나다 전체'}
+                    </span>
+                  )}
                 </div>
                 <PostTitle>{post.title}</PostTitle>
                 <PostPreview>{post.content}</PostPreview>

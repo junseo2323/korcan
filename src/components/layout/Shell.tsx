@@ -1,7 +1,8 @@
 'use client'
 
-import React from 'react'
+import React, { useEffect } from 'react'
 import { usePathname } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 import TopHeader from './TopHeader'
 import BottomNavigation from './BottomNavigation'
 import { Toaster } from 'sonner'
@@ -18,8 +19,14 @@ const MobileWrapper = styled.div<{ $isAuthPage: boolean }>`
 
 export default function Shell({ children }: { children: React.ReactNode }) {
     const pathname = usePathname()
-    // Check if path is login or register
+    const { data: session } = useSession()
     const isAuthPage = pathname === '/login' || pathname === '/register'
+
+    useEffect(() => {
+        if (session?.user) {
+            fetch('/api/ping', { method: 'POST' })
+        }
+    }, [session?.user])
 
     return (
         <ChatProvider>

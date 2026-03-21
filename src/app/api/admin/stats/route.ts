@@ -8,10 +8,12 @@ export async function GET() {
 
     const now = new Date()
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate())
 
     const [
         totalUsers,
         newUsersThisMonth,
+        todayVisitors,
         totalPosts,
         totalProducts,
         totalProperties,
@@ -20,6 +22,7 @@ export async function GET() {
     ] = await Promise.all([
         prisma.user.count(),
         prisma.user.count({ where: { createdAt: { gte: startOfMonth } } }),
+        prisma.user.count({ where: { lastActiveAt: { gte: startOfToday } } }),
         prisma.post.count(),
         prisma.product.count(),
         prisma.property.count(),
@@ -51,6 +54,7 @@ export async function GET() {
     return NextResponse.json({
         totalUsers,
         newUsersThisMonth,
+        todayVisitors,
         totalPosts,
         totalProducts,
         totalProperties,
