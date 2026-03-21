@@ -9,9 +9,31 @@ import Toast from '@/components/ui/Toast'
 const Container = styled.div`
   display: flex;
   flex-direction: column;
+  min-height: 100vh;
+  background-color: ${({ theme }) => theme.colors.background.secondary};
+
+  @media (min-width: 768px) {
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1rem;
+  }
+`
+
+const FormCard = styled.div`
+  display: flex;
+  flex-direction: column;
   padding: 2rem 1rem;
-  height: 100vh;
+  flex: 1;
   background-color: ${({ theme }) => theme.colors.background.primary};
+
+  @media (min-width: 768px) {
+    width: 100%;
+    max-width: 480px;
+    flex: unset;
+    border-radius: 24px;
+    padding: 2.5rem 2rem;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.1);
+  }
 `
 
 const Title = styled.h1`
@@ -286,6 +308,7 @@ export default function RegisterPage() {
 
   return (
     <Container>
+      <FormCard>
       <Title>환영합니다!<br />필수 정보를 입력해주세요.</Title>
 
       <InputGroup>
@@ -451,6 +474,7 @@ export default function RegisterPage() {
           </div>
         </div>
       )}
+      </FormCard>
     </Container>
   )
 }
@@ -470,7 +494,7 @@ function TermsContent() {
       <b>제5조 탈퇴</b>
       <p>admin@korcan.cc로 탈퇴 요청 시 5영업일 이내 처리됩니다.</p>
       <b>제6조 준거법</b>
-      <p>본 약관은 캐나다 온타리오 주법을 준거법으로 합니다.</p>
+      <p>본 약관은 대한민국 법률을 준거법으로 합니다.</p>
       <p style={{ marginTop: '1rem', color: '#64748b', fontSize: '0.8rem' }}>시행일: 2026년 3월 21일</p>
     </div>
   )
