@@ -7,14 +7,29 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>
 }
 
+function isIosSafari() {
+  const ua = navigator.userAgent
+  const isIos = /iphone|ipad|ipod/i.test(ua)
+  const isWebkit = /webkit/i.test(ua)
+  const isChrome = /CriOS/i.test(ua)
+  const isFirefox = /FxiOS/i.test(ua)
+  return isIos && isWebkit && !isChrome && !isFirefox
+}
+
 export default function InstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
   const [show, setShow] = useState(false)
+  const [isIos, setIsIos] = useState(false)
 
   useEffect(() => {
-    // Already installed (standalone mode)
     if (window.matchMedia('(display-mode: standalone)').matches) return
     if (localStorage.getItem('install-prompt-dismissed')) return
+
+    if (isIosSafari()) {
+      setIsIos(true)
+      setShow(true)
+      return
+    }
 
     const handler = (e: Event) => {
       e.preventDefault()
@@ -63,23 +78,35 @@ export default function InstallPrompt() {
         <span style={{ fontSize: '1.5rem' }}>📲</span>
         <div>
           <p style={{ margin: 0, fontWeight: 600, fontSize: '0.95rem' }}>홈 화면에 추가</p>
-          <p style={{ margin: '4px 0 0', fontSize: '0.82rem', color: '#94a3b8' }}>
-            KorCan을 앱처럼 빠르게 사용하세요.
-          </p>
+          {isIos ? (
+            <p style={{ margin: '4px 0 0', fontSize: '0.82rem', color: '#94a3b8', lineHeight: 1.5 }}>
+              하단 공유 버튼(<span style={{ fontSize: '1rem' }}>⎙</span>)을 누른 후<br />
+              <strong style={{ color: '#cbd5e1' }}>"홈 화면에 추가"</strong>를 선택하세요.
+            </p>
+          ) : (
+            <p style={{ margin: '4px 0 0', fontSize: '0.82rem', color: '#94a3b8' }}>
+              KorCan을 앱처럼 빠르게 사용하세요.
+            </p>
+          )}
         </div>
       </div>
       <div style={{ display: 'flex', gap: '8px' }}>
-        <button onClick={handleInstall} style={{
-          flex: 1, background: '#3B82F6', color: '#fff', border: 'none',
-          borderRadius: '8px', padding: '10px', fontWeight: 600, fontSize: '0.875rem', cursor: 'pointer',
-        }}>
-          추가
-        </button>
+        {!isIos && (
+          <button onClick={handleInstall} style={{
+            flex: 1, background: '#3B82F6', color: '#fff', border: 'none',
+            borderRadius: '8px', padding: '10px', fontWeight: 600, fontSize: '0.875rem', cursor: 'pointer',
+          }}>
+            추가
+          </button>
+        )}
         <button onClick={handleDismiss} style={{
-          flex: 1, background: '#1e293b', color: '#94a3b8', border: 'none',
+          flex: isIos ? undefined : 1,
+          width: isIos ? '100%' : undefined,
+          background: isIos ? '#3B82F6' : '#1e293b',
+          color: '#fff', border: 'none',
           borderRadius: '8px', padding: '10px', fontWeight: 600, fontSize: '0.875rem', cursor: 'pointer',
         }}>
-          나중에
+          확인
         </button>
       </div>
     </div>
