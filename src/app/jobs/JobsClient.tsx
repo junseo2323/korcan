@@ -12,12 +12,16 @@ const REGIONS = [
   { value: 'on', label: '🏙 ON (토론토)' },
   { value: 'ab', label: '🏔 AB (캘거리)' },
   { value: 'qc', label: '⚜️ QC (몬트리올)' },
+  { value: 'mb', label: '🌾 MB (위니펙)' },
+  { value: 'ns', label: '🌊 NS (핼리팩스)' },
+  { value: 'remote', label: '🌐 리모트' },
 ]
 
 const SOURCES = [
   { value: '', label: '모든 출처' },
   { value: 'jobbank', label: 'Job Bank' },
-  { value: 'indeed', label: 'Indeed' },
+  { value: 'adzuna', label: 'Adzuna' },
+  { value: 'remoteok', label: 'RemoteOK' },
 ]
 
 const PageContainer = styled.div`
@@ -120,14 +124,20 @@ const JobTitle = styled.div`
   line-height: 1.4;
 `
 
+const SOURCE_STYLE: Record<string, { bg: string; color: string; label: string }> = {
+  jobbank:  { bg: '#dbeafe', color: '#1d4ed8', label: 'Job Bank' },
+  adzuna:   { bg: '#dcfce7', color: '#166534', label: 'Adzuna' },
+  remoteok: { bg: '#f3e8ff', color: '#7e22ce', label: 'RemoteOK' },
+}
+
 const SourceBadge = styled.span<{ $source: string }>`
   flex-shrink: 0;
   font-size: 0.7rem;
   font-weight: 700;
   padding: 2px 8px;
   border-radius: 6px;
-  background-color: ${({ $source }) => $source === 'jobbank' ? '#dbeafe' : '#fef3c7'};
-  color: ${({ $source }) => $source === 'jobbank' ? '#1d4ed8' : '#92400e'};
+  background-color: ${({ $source }) => SOURCE_STYLE[$source]?.bg || '#f3f4f6'};
+  color: ${({ $source }) => SOURCE_STYLE[$source]?.color || '#374151'};
 `
 
 const JobMeta = styled.div`
@@ -223,7 +233,7 @@ export default function JobsClient() {
     setKeyword(inputValue)
   }
 
-  const sourceLabel = (src: string) => src === 'jobbank' ? 'Job Bank' : 'Indeed'
+  const sourceLabel = (src: string) => SOURCE_STYLE[src]?.label || src
 
   return (
     <PageContainer>
