@@ -1,9 +1,13 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, NextRequest } from 'next/server'
 import OpenAI from 'openai'
+import { checkRateLimit } from '@/lib/rateLimit'
 
 export const dynamic = 'force-dynamic'
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
+    const limited = checkRateLimit(req, 'receipt-analyze', { limit: 5, windowMs: 60_000 })
+    if (limited) return limited
+
     // Initialize OpenAI client inside the handler to prevent build-time errors
     const openai = new OpenAI({
         apiKey: process.env.OPENAI_API_KEY,

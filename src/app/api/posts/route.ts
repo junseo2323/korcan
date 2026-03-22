@@ -1,7 +1,9 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
+import { apiError } from '@/lib/apiError'
+import { checkRateLimit } from '@/lib/rateLimit'
 
 export async function GET(req: Request) {
     const { searchParams } = new URL(req.url)
@@ -35,7 +37,10 @@ export async function GET(req: Request) {
     return NextResponse.json(posts)
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
+    const limited = checkRateLimit(req, 'posts', { limit: 10, windowMs: 60 * 60_000 })
+    if (limited) return limited
+
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -114,12 +119,7 @@ export async function POST(req: Request) {
             })
             return NextResponse.json(post)
         }
-    } catch (error: any) {
-        console.error('Create Post Error:', error)
-        return NextResponse.json({
-            error: 'Failed to create post',
-            details: error.message,
-            stack: error.stack
-        }, { status: 500 })
+    } catch (error: unknown) {
+        return apiError('Failed to create post', error)
     }
 }

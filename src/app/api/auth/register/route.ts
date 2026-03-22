@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
+import { apiError } from '@/lib/apiError'
 
 /**
  * @swagger
@@ -81,12 +82,7 @@ export async function PUT(req: Request) {
             }
         })
         return NextResponse.json(user)
-    } catch (error: any) {
-        console.error('Register error:', error)
-        return NextResponse.json({
-            error: 'Failed to register',
-            details: error.message,
-            stack: error.stack
-        }, { status: 500 })
+    } catch (error: unknown) {
+        return apiError('Failed to register', error)
     }
 }

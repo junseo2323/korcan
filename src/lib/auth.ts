@@ -11,12 +11,10 @@ export const authOptions: NextAuthOptions = {
         GoogleProvider({
             clientId: process.env.GOOGLE_CLIENT_ID || "",
             clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
-            allowDangerousEmailAccountLinking: true,
         }),
         KakaoProvider({
             clientId: process.env.KAKAO_CLIENT_ID!,
             clientSecret: process.env.KAKAO_CLIENT_SECRET!,
-            allowDangerousEmailAccountLinking: true,
         }),
         // Development-only auto-login
         ...(process.env.NODE_ENV === 'development' ? [
@@ -33,7 +31,7 @@ export const authOptions: NextAuthOptions = {
                             email: 'test@localhost.dev',
                             name: 'Dev User',
                             isRegistered: true,
-                            role: 'USER',
+                            role: 'ADMIN',
                         },
                     })
                     return testUser

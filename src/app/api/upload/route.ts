@@ -3,9 +3,23 @@ import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { v4 as uuidv4 } from 'uuid'
+import { apiError } from '@/lib/apiError'
+import { checkRateLimit } from '@/lib/rateLimit'
+
+const ALLOWED_MIME_TYPES = new Set([
+    'image/jpeg',
+    'image/jpg',
+    'image/png',
+    'image/gif',
+    'image/webp',
+    'image/heic',
+    'image/heif',
+])
+
+const AWS_REGION = process.env.KORCAN_AWS_DEFAULT_REGION || 'ca-central-1'
 
 const s3Client = new S3Client({
-    region: process.env.KORCAN_AWS_DEFAULT_REGION || 'ap-northeast-2',
+    region: AWS_REGION,
     credentials: {
         accessKeyId: process.env.KORCAN_AWS_ACCESS_KEY_ID || '',
         secretAccessKey: process.env.KORCAN_AWS_SECRET_ACCESS_KEY || '',
@@ -13,6 +27,9 @@ const s3Client = new S3Client({
 })
 
 export async function POST(req: NextRequest) {
+    const limited = checkRateLimit(req, 'upload', { limit: 10, windowMs: 60_000 })
+    if (limited) return limited
+
     try {
         const session = await getServerSession(authOptions)
         if (!session) {
@@ -34,10 +51,16 @@ export async function POST(req: NextRequest) {
         const uploadedUrls: string[] = []
 
         for (const file of files) {
+            // MIME 타입 화이트리스트 검증
+            if (!ALLOWED_MIME_TYPES.has(file.type)) {
+                return NextResponse.json(
+                    { error: '이미지 파일만 업로드할 수 있습니다. (jpg, png, gif, webp, heic)' },
+                    { status: 400 }
+                )
+            }
+
             const buffer = Buffer.from(await file.arrayBuffer())
-            // Sanitize filename or just use uuid
-            // Keeping original extension
-            const fileExtension = file.name.split('.').pop() || 'jpg'
+            const fileExtension = file.name.split('.').pop()?.toLowerCase() || 'jpg'
             const fileName = `uploads/${uuidv4()}.${fileExtension}`
 
             await s3Client.send(new PutObjectCommand({
@@ -45,24 +68,18 @@ export async function POST(req: NextRequest) {
                 Key: fileName,
                 Body: buffer,
                 ContentType: file.type,
-                // ACL is handled by bucket policy
             }))
 
-            const url = `https://${bucketName}.s3.${process.env.KORCAN_AWS_DEFAULT_REGION || 'ap-northeast-2'}.amazonaws.com/${fileName}`
+            const url = `https://${bucketName}.s3.${AWS_REGION}.amazonaws.com/${fileName}`
             uploadedUrls.push(url)
         }
 
-        // Return first url as 'url' for backward compatibility, and full list as 'urls'
         return NextResponse.json({
             url: uploadedUrls[0],
             urls: uploadedUrls
         })
 
-    } catch (e: any) {
-        console.error('Upload error:', e)
-        return NextResponse.json({
-            error: 'Upload failed',
-            details: e.message
-        }, { status: 500 })
+    } catch (error: unknown) {
+        return apiError('Upload failed', error)
     }
 }

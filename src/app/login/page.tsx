@@ -13,7 +13,7 @@ function isInAppBrowser() {
 }
 
 const ERROR_MESSAGES: Record<string, string> = {
-  OAuthAccountNotLinked: '이미 다른 방법으로 가입된 이메일입니다. 카카오로 로그인해보세요.',
+  OAuthAccountNotLinked: '이미 다른 로그인 방법으로 가입된 이메일입니다. 처음 가입할 때 사용한 방법(구글 또는 카카오)으로 로그인해주세요.',
   AccessDenied: '로그인이 취소됐습니다.',
   OAuthCallbackError: '로그인 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
   OAuthSignin: '로그인 요청에 실패했습니다. 잠시 후 다시 시도해주세요.',
