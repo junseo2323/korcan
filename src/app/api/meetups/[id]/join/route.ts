@@ -18,12 +18,15 @@ export async function POST(
     try {
         const meetup = await prisma.meetup.findUnique({
             where: { id: meetupId },
-            include: { participants: true }
+            include: { participants: true, posts: { select: { id: true }, take: 1 } }
         })
 
         if (!meetup) {
             return NextResponse.json({ error: 'Meetup not found' }, { status: 404 })
         }
+
+        const postId = meetup.posts[0]?.id
+        const meetupUrl = postId ? `/community/${postId}` : `/community`
 
         if (meetup.status === 'CLOSED') {
             return NextResponse.json({ error: 'Meetup is closed' }, { status: 400 })
@@ -67,7 +70,7 @@ export async function POST(
                         userId: meetup.organizerId,
                         type: 'MEETUP_JOIN',
                         message: `${session.user.name || '누군가'}님이 "${meetup.title.slice(0, 20)}"에 참가했습니다.`,
-                        targetUrl: `/community/meetups/${meetupId}`,
+                        targetUrl: meetupUrl,
                     },
                 })
             }
@@ -76,7 +79,7 @@ export async function POST(
         // Push notification (fire-and-forget)
         if (meetup.organizerId !== session.user.id) {
             const message = `${session.user.name || '누군가'}님이 "${meetup.title.slice(0, 20)}"에 참가했습니다.`
-            sendPushToUser(meetup.organizerId, { title: 'KorCan 알림', body: message, url: `https://korcan.cc/community/meetups/${meetupId}` }).catch(console.error)
+            sendPushToUser(meetup.organizerId, { title: 'KorCan 알림', body: message, url: `https://korcan.cc${meetupUrl}` }).catch(console.error)
         }
 
         return NextResponse.json({ success: true })
