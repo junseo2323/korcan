@@ -99,10 +99,11 @@ export async function PUT(
 
     const { id } = await params
     const body = await req.json()
-    const { title, content, category } = body
+    const { title, content, category, meetupData } = body
 
     const post = await prisma.post.findUnique({
-        where: { id }
+        where: { id },
+        include: { meetup: true }
     })
 
     if (!post) {
@@ -119,6 +120,20 @@ export async function PUT(
         where: { id },
         data: { title, content, category }
     })
+
+    if (post.meetup && meetupData) {
+        await prisma.meetup.update({
+            where: { id: post.meetup.id },
+            data: {
+                title,
+                description: content,
+                date: new Date(meetupData.date),
+                maxMembers: parseInt(meetupData.maxMembers),
+                region: meetupData.place || post.meetup.region,
+                image: meetupData.image ?? post.meetup.image,
+            }
+        })
+    }
 
     return NextResponse.json(updated)
 }

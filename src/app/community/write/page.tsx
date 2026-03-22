@@ -198,6 +198,7 @@ function WritePostContent() {
   const [scope, setScope] = useState<'Local' | 'Global'>('Local')
   const [postImages, setPostImages] = useState<File[]>([])
   const [previewUrls, setPreviewUrls] = useState<string[]>([])
+  const [existingMeetupImage, setExistingMeetupImage] = useState<string | null>(null)
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -256,11 +257,11 @@ function WritePostContent() {
           setContent(data.content)
           setCategory(data.category)
           setScope(data.region === 'Global' ? 'Global' : 'Local')
-          // Load existing images if needed (complex, skipping for now or just append)
-          // If meetup, load meetup data
           if (data.meetup) {
-            setMeetupDate(data.meetup.date)
+            setMeetupDate(new Date(data.meetup.date).toISOString().slice(0, 16))
             setMaxMembers(data.meetup.maxMembers.toString())
+            setMeetupPlace(data.meetup.region || '')
+            if (data.meetup.image) setExistingMeetupImage(data.meetup.image)
           }
         })
         .catch(console.error)
@@ -283,11 +284,13 @@ function WritePostContent() {
       // 2. Determine region value
       const regionValue = scope === 'Global' ? 'Global' : (session?.user?.region || 'Global')
 
+      const meetupImage = uploadedImageUrls.length > 0 ? uploadedImageUrls[0] : existingMeetupImage
+
       const meetupData = isMeetup ? {
         date: meetupDate,
         maxMembers,
         place: meetupPlace,
-        image: uploadedImageUrls.length > 0 ? uploadedImageUrls[0] : null // Use first image as thumbnail
+        image: meetupImage,
       } : null
 
       if (editId) {
@@ -295,11 +298,7 @@ function WritePostContent() {
         const res = await fetch(`/api/posts/${editId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            title, content, category,
-            // Currently API only supports title, content, category. 
-            // Meetup/Images update might need extended API.
-          })
+          body: JSON.stringify({ title, content, category, meetupData })
         })
         if (!res.ok) throw new Error('Update failed')
 
@@ -411,6 +410,23 @@ function WritePostContent() {
               <span>{postImages.length}/10</span>
               <input type="file" multiple accept="image/*" onChange={handleImageChange} style={{ display: 'none' }} />
             </label>
+
+            {existingMeetupImage && postImages.length === 0 && (
+              <div style={{ position: 'relative', width: '80px', height: '80px' }}>
+                <img src={existingMeetupImage} style={{ width: '100%', height: '100%', borderRadius: '8px', objectFit: 'cover' }} />
+                <button
+                  onClick={() => setExistingMeetupImage(null)}
+                  style={{
+                    position: 'absolute', top: -6, right: -6,
+                    backgroundColor: '#ef4444', color: 'white',
+                    border: 'none', borderRadius: '50%', width: '20px', height: '20px',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', cursor: 'pointer'
+                  }}
+                >
+                  X
+                </button>
+              </div>
+            )}
 
             {previewUrls.map((url, idx) => (
               <div key={idx} style={{ position: 'relative', width: '80px', height: '80px' }}>
