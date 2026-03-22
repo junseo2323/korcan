@@ -94,7 +94,7 @@ const CommentList = styled.div`
 
 const CommentInputBox = styled.div`
   position: fixed;
-  bottom: calc(60px + env(safe-area-inset-bottom)); /* Sit above BottomNavigation */
+  bottom: calc(60px + env(safe-area-inset-bottom));
   left: 0;
   right: 0;
   padding: 1rem;
@@ -103,8 +103,11 @@ const CommentInputBox = styled.div`
   display: flex;
   gap: 0.5rem;
   align-items: center;
-  z-index: 900; /* Below Nav (1000) but above content */
-  /* Remove extra padding-bottom since it's above the safe area now */
+  z-index: 900;
+
+  @media (min-width: 768px) {
+    bottom: 0;
+  }
 `
 
 const Input = styled.input`
