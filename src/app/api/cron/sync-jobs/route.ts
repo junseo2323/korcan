@@ -4,7 +4,12 @@ import Parser from 'rss-parser'
 
 export const dynamic = 'force-dynamic'
 
-const parser = new Parser()
+const parser = new Parser({
+  headers: {
+    'User-Agent': 'Mozilla/5.0 (compatible; KorCan/1.0; +https://korcan.cc)',
+    'Accept': 'application/atom+xml, application/rss+xml, text/xml, */*',
+  },
+})
 
 // Job Bank Canada province codes
 const PROVINCES = [
@@ -14,13 +19,13 @@ const PROVINCES = [
   { fprov: 'QC', region: 'qc' },
 ]
 
-async function fetchJobBank(fprov: string): Promise<any[]> {
+async function fetchJobBank(fprov: string): Promise<{ items: any[], error?: string }> {
   try {
     const url = `https://www.jobbank.gc.ca/jobsearch/feed/jobSearchRSSfeed?fage=3&sort=D&rows=100&fprov=${fprov}`
     const feed = await parser.parseURL(url)
-    return feed.items || []
-  } catch {
-    return []
+    return { items: feed.items || [] }
+  } catch (e: any) {
+    return { items: [], error: `${fprov}: ${e?.message || e}` }
   }
 }
 
@@ -64,9 +69,11 @@ export async function POST(req: NextRequest) {
 
   let upserted = 0
   let errors = 0
+  const fetchErrors: string[] = []
 
   for (const { fprov, region } of PROVINCES) {
-    const items = await fetchJobBank(fprov)
+    const { items, error } = await fetchJobBank(fprov)
+    if (error) fetchErrors.push(error)
     for (const item of items) {
       const job = parseJobBankItem(item, region)
       if (!job.url) continue
@@ -77,8 +84,9 @@ export async function POST(req: NextRequest) {
           create: job,
         })
         upserted++
-      } catch {
+      } catch (e: any) {
         errors++
+        fetchErrors.push(`upsert: ${e?.message}`)
       }
     }
   }
@@ -91,5 +99,5 @@ export async function POST(req: NextRequest) {
     data: { active: false },
   })
 
-  return NextResponse.json({ upserted, errors })
+  return NextResponse.json({ upserted, errors, fetchErrors })
 }
