@@ -381,6 +381,28 @@ model SiteConfig {
   updatedAt DateTime @updatedAt
 }
 
+// Job Board
+model Job {
+  id          String    @id @default(cuid())
+  externalId  String    @unique
+  source      String    // 'jobbank' | 'indeed'
+  title       String
+  company     String?
+  location    String?
+  region      String?
+  description String?
+  url         String
+  salary      String?
+  jobType     String?
+  category    String?
+  postedAt    DateTime?
+  fetchedAt   DateTime  @default(now())
+  active      Boolean   @default(true)
+
+  @@index([region, active])
+  @@index([source, active])
+}
+
 // PWA Push Subscriptions
 model PushSubscription {
   id        String   @id @default(cuid())

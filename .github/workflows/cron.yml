@@ -1,15 +1,25 @@
-name: Cron - Cleanup Unregistered Users
+name: Cron Jobs
 
 on:
   schedule:
-    - cron: '0 3 * * *' # 매일 UTC 03:00 (KST 12:00, EDT 23:00)
+    - cron: '0 2 * * *' # 매일 UTC 02:00 - 일자리 동기화
+    - cron: '0 3 * * *' # 매일 UTC 03:00 - 미완성 유저 정리
   workflow_dispatch: # 수동 실행 가능
 
 jobs:
-  cleanup:
+  sync-jobs:
     runs-on: ubuntu-latest
     steps:
-      - name: Call cleanup API
+      - name: Sync job listings
+        run: |
+          curl -s -o /dev/null -w "%{http_code}" \
+            -X POST https://korcan.cc/api/cron/sync-jobs \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
+
+  cleanup-users:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cleanup unregistered users
         run: |
           curl -s -o /dev/null -w "%{http_code}" \
             -X POST https://korcan.cc/api/cron/cleanup-users \
