@@ -1,9 +1,9 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
-import styled from 'styled-components'
-import { Search, MapPin, ExternalLink, Briefcase } from 'lucide-react'
-import { formatDistanceToNow } from 'date-fns'
+import styled, { keyframes } from 'styled-components'
+import { Search, MapPin, ExternalLink, Briefcase, X, Calendar, Tag, ChevronRight } from 'lucide-react'
+import { formatDistanceToNow, format } from 'date-fns'
 import { ko } from 'date-fns/locale'
 
 const REGIONS = [
@@ -25,6 +25,15 @@ const SOURCES = [
   { value: 'cankorjobs', label: '🇰🇷 한인' },
 ]
 
+const SOURCE_STYLE: Record<string, { bg: string; color: string; label: string }> = {
+  jobbank:    { bg: '#dbeafe', color: '#1d4ed8', label: 'Job Bank' },
+  adzuna:     { bg: '#dcfce7', color: '#166534', label: 'Adzuna' },
+  remoteok:   { bg: '#f3e8ff', color: '#7e22ce', label: 'RemoteOK' },
+  cankorjobs: { bg: '#fff1f2', color: '#be123c', label: '🇰🇷 한인' },
+}
+
+// ─── List styles ──────────────────────────────────────────────────────────────
+
 const PageContainer = styled.div`
   max-width: 900px;
   margin: 0 auto;
@@ -36,12 +45,6 @@ const PageTitle = styled.h1`
   font-weight: 800;
   color: ${({ theme }) => theme.colors.text.primary};
   margin-bottom: 0.25rem;
-`
-
-const PageSubtitle = styled.p`
-  font-size: 0.9rem;
-  color: ${({ theme }) => theme.colors.text.secondary};
-  margin-bottom: 1.5rem;
 `
 
 const FilterBar = styled.div`
@@ -89,13 +92,13 @@ const JobList = styled.div`
   gap: 0.75rem;
 `
 
-const JobCard = styled.a`
+const JobCard = styled.div`
   display: block;
   background: white;
   border-radius: 16px;
   padding: 1.25rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  text-decoration: none;
+  cursor: pointer;
   transition: transform 0.15s, box-shadow 0.15s;
 
   &:active {
@@ -124,13 +127,6 @@ const JobTitle = styled.div`
   color: ${({ theme }) => theme.colors.text.primary};
   line-height: 1.4;
 `
-
-const SOURCE_STYLE: Record<string, { bg: string; color: string; label: string }> = {
-  jobbank:    { bg: '#dbeafe', color: '#1d4ed8', label: 'Job Bank' },
-  adzuna:     { bg: '#dcfce7', color: '#166534', label: 'Adzuna' },
-  remoteok:   { bg: '#f3e8ff', color: '#7e22ce', label: 'RemoteOK' },
-  cankorjobs: { bg: '#fff1f2', color: '#be123c', label: '🇰🇷 한인' },
-}
 
 const SourceBadge = styled.span<{ $source: string }>`
   flex-shrink: 0;
@@ -207,6 +203,152 @@ const EmptyIcon = styled.div`
   margin-bottom: 1rem;
 `
 
+// ─── Detail Modal styles ───────────────────────────────────────────────────────
+
+const slideUp = keyframes`
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+`
+
+const fadeIn = keyframes`
+  from { opacity: 0; }
+  to   { opacity: 1; }
+`
+
+const Overlay = styled.div`
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 2000;
+  animation: ${fadeIn} 0.2s ease;
+  display: flex;
+  align-items: flex-end;
+
+  @media (min-width: 768px) {
+    align-items: center;
+    justify-content: center;
+  }
+`
+
+const Sheet = styled.div`
+  background: white;
+  width: 100%;
+  max-height: 90vh;
+  border-radius: 24px 24px 0 0;
+  overflow-y: auto;
+  animation: ${slideUp} 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+
+  @media (min-width: 768px) {
+    max-width: 600px;
+    max-height: 80vh;
+    border-radius: 20px;
+    animation: ${fadeIn} 0.2s ease;
+  }
+`
+
+const SheetHandle = styled.div`
+  width: 40px;
+  height: 4px;
+  background: #e2e8f0;
+  border-radius: 2px;
+  margin: 12px auto 0;
+
+  @media (min-width: 768px) {
+    display: none;
+  }
+`
+
+const SheetHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 1.25rem 1.25rem 0;
+  gap: 0.75rem;
+`
+
+const SheetTitle = styled.h2`
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: ${({ theme }) => theme.colors.text.primary};
+  line-height: 1.4;
+  flex: 1;
+`
+
+const CloseBtn = styled.button`
+  background: #f1f5f9;
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  color: #64748b;
+  &:hover { background: #e2e8f0; }
+`
+
+const SheetBody = styled.div`
+  padding: 1rem 1.25rem 1.5rem;
+`
+
+const DetailRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 0.9rem;
+  color: ${({ theme }) => theme.colors.text.secondary};
+
+  &:last-of-type { border-bottom: none; }
+
+  svg { flex-shrink: 0; color: #94a3b8; }
+`
+
+const DetailLabel = styled.span`
+  font-weight: 600;
+  color: ${({ theme }) => theme.colors.text.primary};
+  min-width: 52px;
+`
+
+const Description = styled.div`
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  line-height: 1.7;
+  color: ${({ theme }) => theme.colors.text.secondary};
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 240px;
+  overflow-y: auto;
+`
+
+const ApplyBtn = styled.a`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1.25rem;
+  width: 100%;
+  padding: 1rem;
+  background: ${({ theme }) => theme.colors.primary};
+  color: white;
+  font-size: 1rem;
+  font-weight: 700;
+  border-radius: 14px;
+  text-decoration: none;
+  transition: opacity 0.15s;
+
+  &:hover { opacity: 0.9; }
+  &:active { opacity: 0.8; }
+`
+
+// ─── Component ────────────────────────────────────────────────────────────────
+
 export default function JobsClient() {
   const [jobs, setJobs] = useState<any[]>([])
   const [total, setTotal] = useState(0)
@@ -216,6 +358,7 @@ export default function JobsClient() {
   const [source, setSource] = useState('')
   const [keyword, setKeyword] = useState('')
   const [inputValue, setInputValue] = useState('')
+  const [selectedJob, setSelectedJob] = useState<any>(null)
 
   const fetchJobs = useCallback(async (pg: number, reset: boolean) => {
     setLoading(true)
@@ -254,6 +397,13 @@ export default function JobsClient() {
 
   const sourceLabel = (src: string) => SOURCE_STYLE[src]?.label || src
 
+  const jobTypeLabel = (t: string | null) => {
+    if (t === 'FULL_TIME') return '정규직'
+    if (t === 'PART_TIME') return '파트타임'
+    if (t === 'CONTRACT') return '계약직'
+    return t
+  }
+
   return (
     <PageContainer>
       <PageTitle>💼 일자리</PageTitle>
@@ -290,7 +440,7 @@ export default function JobsClient() {
           </div>
           <JobList>
             {jobs.map((job: any) => (
-              <JobCard key={job.id} href={job.url} target="_blank" rel="noopener noreferrer">
+              <JobCard key={job.id} onClick={() => setSelectedJob(job)}>
                 <JobHeader>
                   <JobTitle>{job.title}</JobTitle>
                   <SourceBadge $source={job.source}>{sourceLabel(job.source)}</SourceBadge>
@@ -305,7 +455,7 @@ export default function JobsClient() {
                     {job.postedAt && (
                       <span>{formatDistanceToNow(new Date(job.postedAt), { addSuffix: true, locale: ko })}</span>
                     )}
-                    <ExternalLink size={13} />
+                    <ChevronRight size={13} />
                   </MetaRight>
                 </JobMeta>
               </JobCard>
@@ -318,6 +468,81 @@ export default function JobsClient() {
             </LoadMoreBtn>
           )}
         </>
+      )}
+
+      {/* Job Detail Modal */}
+      {selectedJob && (
+        <Overlay onClick={() => setSelectedJob(null)}>
+          <Sheet onClick={e => e.stopPropagation()}>
+            <SheetHandle />
+            <SheetHeader>
+              <SheetTitle>{selectedJob.title}</SheetTitle>
+              <CloseBtn onClick={() => setSelectedJob(null)}>
+                <X size={16} />
+              </CloseBtn>
+            </SheetHeader>
+
+            <SheetBody>
+              <div style={{ marginBottom: '0.75rem' }}>
+                <SourceBadge $source={selectedJob.source}>
+                  {sourceLabel(selectedJob.source)}
+                </SourceBadge>
+              </div>
+
+              {selectedJob.company && (
+                <DetailRow>
+                  <Briefcase size={16} />
+                  <DetailLabel>회사</DetailLabel>
+                  <span>{selectedJob.company}</span>
+                </DetailRow>
+              )}
+              {selectedJob.location && (
+                <DetailRow>
+                  <MapPin size={16} />
+                  <DetailLabel>위치</DetailLabel>
+                  <span>{selectedJob.location}</span>
+                </DetailRow>
+              )}
+              {selectedJob.salary && (
+                <DetailRow>
+                  <span style={{ fontSize: '1rem' }}>💰</span>
+                  <DetailLabel>급여</DetailLabel>
+                  <span>{selectedJob.salary}</span>
+                </DetailRow>
+              )}
+              {selectedJob.jobType && (
+                <DetailRow>
+                  <Tag size={16} />
+                  <DetailLabel>고용형태</DetailLabel>
+                  <span>{jobTypeLabel(selectedJob.jobType)}</span>
+                </DetailRow>
+              )}
+              {selectedJob.category && (
+                <DetailRow>
+                  <Tag size={16} />
+                  <DetailLabel>직종</DetailLabel>
+                  <span>{selectedJob.category}</span>
+                </DetailRow>
+              )}
+              {selectedJob.postedAt && (
+                <DetailRow>
+                  <Calendar size={16} />
+                  <DetailLabel>등록일</DetailLabel>
+                  <span>{format(new Date(selectedJob.postedAt), 'yyyy년 M월 d일', { locale: ko })}</span>
+                </DetailRow>
+              )}
+
+              {selectedJob.description && (
+                <Description>{selectedJob.description.replace(/<[^>]+>/g, '').trim()}</Description>
+              )}
+
+              <ApplyBtn href={selectedJob.url} target="_blank" rel="noopener noreferrer">
+                <ExternalLink size={18} />
+                지원하기
+              </ApplyBtn>
+            </SheetBody>
+          </Sheet>
+        </Overlay>
       )}
     </PageContainer>
   )
