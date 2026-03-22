@@ -1,27 +1,49 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react'
-import styled from 'styled-components'
+import styled, { keyframes } from 'styled-components'
 import { useChat } from '@/contexts/ChatContext'
 import { useSession } from 'next-auth/react'
 import { X, Send, UserPlus, MessageCircle, ChevronLeft } from 'lucide-react'
 import { format } from 'date-fns'
 
+const slideUp = keyframes`
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+`
+
+const popIn = keyframes`
+  from { opacity: 0; transform: translateY(16px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+`
+
 const PopupContainer = styled.div<{ $isOpen: boolean }>`
   position: fixed;
-  bottom: 80px;
-  right: 20px;
-  width: 350px;
-  height: 500px;
-  background-color: white;
-  border-radius: 16px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-  border: 1px solid ${({ theme }) => theme.colors.neutral.gray200};
   display: ${({ $isOpen }) => ($isOpen ? 'flex' : 'none')};
   flex-direction: column;
   z-index: 3000;
   overflow: hidden;
   font-family: inherit;
+  background-color: white;
+
+  /* 모바일: 전체화면 모달 + 아래서 위로 슬라이드 */
+  inset: 0;
+  border-radius: 0;
+  box-shadow: none;
+  animation: ${({ $isOpen }) => $isOpen ? slideUp : 'none'} 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+
+  /* PC: 우하단 팝업 + 페이드+슬라이드 */
+  @media (min-width: 768px) {
+    inset: auto;
+    bottom: 80px;
+    right: 20px;
+    width: 350px;
+    height: 500px;
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    border: 1px solid ${({ theme }) => theme.colors.neutral.gray200};
+    animation: ${({ $isOpen }) => $isOpen ? popIn : 'none'} 0.2s ease;
+  }
 `
 
 const Header = styled.div`
@@ -162,10 +184,15 @@ const MessageBubble = styled.div<{ $isMine: boolean }>`
 
 const ChatInputArea = styled.div`
     padding: 0.75rem;
+    padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
     background-color: white;
     border-top: 1px solid #eee;
     display: flex;
     gap: 0.5rem;
+
+    @media (min-width: 768px) {
+        padding-bottom: 0.75rem;
+    }
 `
 
 const ChatInput = styled.input`
