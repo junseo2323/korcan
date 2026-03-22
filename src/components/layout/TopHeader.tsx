@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react'
 import styled from 'styled-components'
-import { User, MessageCircle, Home, PieChart, Calendar, Users, ShoppingBag, Search } from 'lucide-react'
+import { User, MessageCircle, Home, CalendarDays, Users, ShoppingBag, Search, Briefcase } from 'lucide-react'
 import { signIn, useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
@@ -105,10 +105,10 @@ export default function TopHeader() {
 
   const links = [
     { href: '/', label: '홈', icon: Home },
-    { href: '/expenses', label: '가계부', icon: PieChart },
-    { href: '/calendar', label: '캘린더', icon: Calendar },
+    { href: '/planner', label: '플래너', icon: CalendarDays },
     { href: '/community', label: '게시판', icon: Users },
     { href: '/market', label: '장터', icon: ShoppingBag },
+    { href: '/jobs', label: '일자리', icon: Briefcase },
   ]
 
   const isActive = (href: string) => {
@@ -117,6 +117,12 @@ export default function TopHeader() {
     }
     if (href === '/community') {
       return pathname.startsWith('/community')
+    }
+    if (href === '/planner') {
+      return pathname.startsWith('/planner') || pathname.startsWith('/calendar') || pathname.startsWith('/expenses')
+    }
+    if (href === '/jobs') {
+      return pathname.startsWith('/jobs')
     }
     return pathname === href
   }
