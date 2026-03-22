@@ -22,6 +22,7 @@ const SOURCES = [
   { value: 'jobbank', label: 'Job Bank' },
   { value: 'adzuna', label: 'Adzuna' },
   { value: 'remoteok', label: 'RemoteOK' },
+  { value: 'cankorjobs', label: '🇰🇷 한인' },
 ]
 
 const PageContainer = styled.div`
@@ -125,9 +126,10 @@ const JobTitle = styled.div`
 `
 
 const SOURCE_STYLE: Record<string, { bg: string; color: string; label: string }> = {
-  jobbank:  { bg: '#dbeafe', color: '#1d4ed8', label: 'Job Bank' },
-  adzuna:   { bg: '#dcfce7', color: '#166534', label: 'Adzuna' },
-  remoteok: { bg: '#f3e8ff', color: '#7e22ce', label: 'RemoteOK' },
+  jobbank:    { bg: '#dbeafe', color: '#1d4ed8', label: 'Job Bank' },
+  adzuna:     { bg: '#dcfce7', color: '#166534', label: 'Adzuna' },
+  remoteok:   { bg: '#f3e8ff', color: '#7e22ce', label: 'RemoteOK' },
+  cankorjobs: { bg: '#fff1f2', color: '#be123c', label: '🇰🇷 한인' },
 }
 
 const SourceBadge = styled.span<{ $source: string }>`
