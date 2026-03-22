@@ -144,21 +144,38 @@ const SourceBadge = styled.span<{ $source: string }>`
 
 const JobMeta = styled.div`
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
   align-items: center;
-  font-size: 0.85rem;
+  gap: 0.5rem;
+  font-size: 0.82rem;
   color: ${({ theme }) => theme.colors.text.secondary};
+  margin-top: 0.25rem;
+`
+
+const MetaLeft = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  flex: 1;
+  min-width: 0;
 `
 
 const MetaItem = styled.span`
   display: flex;
   align-items: center;
   gap: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 160px;
 `
 
-const ExternalIcon = styled.span`
-  margin-left: auto;
+const MetaRight = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+  white-space: nowrap;
   color: ${({ theme }) => theme.colors.text.secondary};
 `
 
@@ -240,7 +257,6 @@ export default function JobsClient() {
   return (
     <PageContainer>
       <PageTitle>💼 일자리</PageTitle>
-      <PageSubtitle>Job Bank · Indeed에서 최신 공고를 모아드립니다</PageSubtitle>
 
       <FilterBar>
         <form onSubmit={handleSearch} style={{ flex: 1, minWidth: 180, display: 'flex' }}>
@@ -280,15 +296,17 @@ export default function JobsClient() {
                   <SourceBadge $source={job.source}>{sourceLabel(job.source)}</SourceBadge>
                 </JobHeader>
                 <JobMeta>
-                  {job.company && <MetaItem><Briefcase size={13} />{job.company}</MetaItem>}
-                  {job.location && <MetaItem><MapPin size={13} />{job.location}</MetaItem>}
-                  {job.salary && <MetaItem>💰 {job.salary}</MetaItem>}
-                  {job.postedAt && (
-                    <MetaItem style={{ marginLeft: 'auto' }}>
-                      {formatDistanceToNow(new Date(job.postedAt), { addSuffix: true, locale: ko })}
-                    </MetaItem>
-                  )}
-                  <ExternalIcon><ExternalLink size={14} /></ExternalIcon>
+                  <MetaLeft>
+                    {job.company && <MetaItem><Briefcase size={13} />{job.company}</MetaItem>}
+                    {job.location && <MetaItem><MapPin size={13} />{job.location}</MetaItem>}
+                    {job.salary && <MetaItem>💰 {job.salary}</MetaItem>}
+                  </MetaLeft>
+                  <MetaRight>
+                    {job.postedAt && (
+                      <span>{formatDistanceToNow(new Date(job.postedAt), { addSuffix: true, locale: ko })}</span>
+                    )}
+                    <ExternalLink size={13} />
+                  </MetaRight>
                 </JobMeta>
               </JobCard>
             ))}
