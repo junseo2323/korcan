@@ -2,8 +2,10 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { prisma } from '@/lib/prisma'
 import { authOptions } from '@/lib/auth'
+import { apiError } from '@/lib/apiError'
 
-export async function GET(req: Request) {
+// 친구 목록 조회 (email 노출 없음)
+export async function GET() {
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -14,16 +16,17 @@ export async function GET(req: Request) {
             where: { userId: session.user.id },
             include: {
                 friend: {
-                    select: { id: true, name: true, image: true, email: true }
+                    select: { id: true, name: true, image: true }
                 }
             }
         })
         return NextResponse.json(friends.map(f => f.friend))
-    } catch (e) {
-        return NextResponse.json({ error: 'Failed to fetch friends' }, { status: 500 })
+    } catch (error: unknown) {
+        return apiError('Failed to fetch friends', error)
     }
 }
 
+// 친구 요청 보내기 (즉시 추가 아님)
 export async function POST(req: Request) {
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) {
@@ -35,59 +38,46 @@ export async function POST(req: Request) {
         if (!email) return NextResponse.json({ error: 'Email required' }, { status: 400 })
 
         if (email === session.user.email) {
-            return NextResponse.json({ error: 'Cannot add yourself' }, { status: 400 })
+            return NextResponse.json({ error: '자기 자신에게는 요청을 보낼 수 없습니다.' }, { status: 400 })
         }
 
-        const friendUser = await prisma.user.findUnique({
-            where: { email }
+        const targetUser = await prisma.user.findUnique({
+            where: { email },
+            select: { id: true, name: true, image: true }
         })
 
-        if (!friendUser) {
-            return NextResponse.json({ error: 'User not found' }, { status: 404 })
+        if (!targetUser) {
+            return NextResponse.json({ error: '해당 이메일의 사용자를 찾을 수 없습니다.' }, { status: 404 })
         }
 
-        const existing = await prisma.friend.findUnique({
+        // 이미 친구인지 확인
+        const alreadyFriend = await prisma.friend.findUnique({
+            where: { userId_friendId: { userId: session.user.id, friendId: targetUser.id } }
+        })
+        if (alreadyFriend) {
+            return NextResponse.json({ error: '이미 친구입니다.' }, { status: 400 })
+        }
+
+        // 이미 요청을 보냈거나 받은 경우 확인
+        const existing = await prisma.friendRequest.findFirst({
             where: {
-                userId_friendId: {
-                    userId: session.user.id,
-                    friendId: friendUser.id
-                }
+                OR: [
+                    { senderId: session.user.id, receiverId: targetUser.id },
+                    { senderId: targetUser.id, receiverId: session.user.id },
+                ],
+                status: 'PENDING'
             }
         })
-
         if (existing) {
-            return NextResponse.json({ error: 'Already friends' }, { status: 400 })
+            return NextResponse.json({ error: '이미 대기 중인 친구 요청이 있습니다.' }, { status: 400 })
         }
 
-        // Add friend (bidirectional for simplicity in this MVP, though schema allows uni)
-        // Actually schema is uni-directional. Let's make it uni-directional for "Follow" style or bi-directional?
-        // User requested "Friend Add". Usually implies bi-directional or request/accept.
-        // For MVP simplicity, let's just create the link for the requester.
-        // AND create the reverse link so it appears for both?
-        // Let's do uni-directional "Add" for now, which effectively acts like a contact list.
-
-        await prisma.friend.create({
-            data: {
-                userId: session.user.id,
-                friendId: friendUser.id
-            }
+        const request = await prisma.friendRequest.create({
+            data: { senderId: session.user.id, receiverId: targetUser.id }
         })
 
-        // Optional: Auto-add reverse link for "Friend" concept
-        try {
-            await prisma.friend.create({
-                data: {
-                    userId: friendUser.id,
-                    friendId: session.user.id
-                }
-            })
-        } catch (e) {
-            // Ignore if already exists
-        }
-
-        return NextResponse.json({ success: true, friend: { id: friendUser.id, name: friendUser.name, image: friendUser.image } })
-    } catch (e) {
-        console.error(e)
-        return NextResponse.json({ error: 'Failed to add friend' }, { status: 500 })
+        return NextResponse.json({ success: true, requestId: request.id })
+    } catch (error: unknown) {
+        return apiError('Failed to send friend request', error)
     }
 }

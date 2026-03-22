@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { prisma } from '@/lib/prisma'
 import { authOptions } from '@/lib/auth'
 import { sendPushToUser } from '@/lib/sendPushNotification'
+import { broadcast } from '@/lib/sseChannel'
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
     const session = await getServerSession(authOptions)
@@ -73,6 +74,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
             where: { id: roomId },
             data: { lastMessageAt: new Date() }
         })
+
+        // SSE 브로드캐스트 (모든 채팅방 참여자에게 실시간 전달)
+        broadcast(roomId, { type: 'message', message })
 
         // Push to other room members (fire-and-forget)
         const otherUserIds = room.users
