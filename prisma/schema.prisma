@@ -399,6 +399,8 @@ model Job {
   url         String
   salary      String?
   salaryMin   Float?
+  latitude    Float?
+  longitude   Float?
   jobType     String?
   category    String?
   postedAt    DateTime?

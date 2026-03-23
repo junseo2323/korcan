@@ -386,11 +386,14 @@ const MapWrapper = styled.div`
 
 // ─── JobMap (geocodes location string → displays map) ─────────────────────────
 
-function JobMap({ location }: { location: string }) {
+function JobMap({ location, latitude, longitude }: { location: string; latitude?: number | null; longitude?: number | null }) {
   const geocodingLib = useMapsLibrary('geocoding')
-  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null)
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(
+    latitude && longitude ? { lat: latitude, lng: longitude } : null
+  )
 
   useEffect(() => {
+    if (latitude && longitude) return // 좌표 있으면 geocoding 스킵
     if (!geocodingLib || !location) return
     const geocoder = new geocodingLib.Geocoder()
     geocoder.geocode({ address: location + ', Canada' }, (results, status) => {
@@ -399,7 +402,7 @@ function JobMap({ location }: { location: string }) {
         setCoords({ lat: loc.lat(), lng: loc.lng() })
       }
     })
-  }, [geocodingLib, location])
+  }, [geocodingLib, location, latitude, longitude])
 
   if (!coords) return null
 
@@ -611,8 +614,8 @@ export default function JobsClient() {
                 <Description>{selectedJob.description.replace(/<[^>]+>/g, '').trim()}</Description>
               )}
 
-              {selectedJob.location && (
-                <JobMap location={selectedJob.location} />
+              {(selectedJob.location || selectedJob.latitude) && (
+                <JobMap location={selectedJob.location} latitude={selectedJob.latitude} longitude={selectedJob.longitude} />
               )}
 
               {selectedJob.url?.startsWith('mailto:') && (
