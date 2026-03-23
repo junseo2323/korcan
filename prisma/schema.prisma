@@ -272,8 +272,10 @@ model Product {
   price       Float
   description String
   category    String
-  imageUrl    String?
-  status      String  @default("SELLING") // SELLING, RESERVED, SOLD
+  imageUrl     String?
+  status       String  @default("SELLING") // SELLING, RESERVED, SOLD
+  contactType  String?  // LINK, KAKAO, EMAIL
+  contactValue String?  // URL, KakaoTalk ID, or email address
 
   sellerId String
   seller   User   @relation(fields: [sellerId], references: [id], onDelete: Cascade)

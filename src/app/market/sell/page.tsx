@@ -175,6 +175,8 @@ export default function SellPage() {
   const [category, setCategory] = useState(CATEGORIES[0])
   const [description, setDescription] = useState('')
   const [imageUrl, setImageUrl] = useState('')
+  const [contactType, setContactType] = useState('KAKAO')
+  const [contactValue, setContactValue] = useState('')
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
 
@@ -215,7 +217,7 @@ export default function SellPage() {
   const handleSubmit = async () => {
     if (!title || !price || !description) return
     setLoading(true)
-    const success = await addProduct(title, parseFloat(price), description, category, imageUrl)
+    const success = await addProduct(title, parseFloat(price), description, category, imageUrl, contactType, contactValue)
     if (success) {
       router.push('/market')
     } else {
@@ -282,6 +284,26 @@ export default function SellPage() {
             value={price}
             onChange={e => setPrice(e.target.value)}
           />
+        </InputGroup>
+
+        <InputGroup>
+          <Label>연락처</Label>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <Select style={{ width: '140px' }} value={contactType} onChange={e => setContactType(e.target.value)}>
+              <option value="KAKAO">카카오톡 ID</option>
+              <option value="EMAIL">이메일</option>
+              <option value="LINK">링크 (URL)</option>
+            </Select>
+            <Input
+              placeholder={
+                contactType === 'KAKAO' ? '카카오톡 아이디 입력' :
+                contactType === 'EMAIL' ? '이메일 주소 입력' :
+                'https://...'
+              }
+              value={contactValue}
+              onChange={e => setContactValue(e.target.value)}
+            />
+          </div>
         </InputGroup>
 
         <InputGroup>

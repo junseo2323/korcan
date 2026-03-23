@@ -24,7 +24,7 @@ export interface Product {
 interface MarketContextType {
     products: Product[]
     refreshProducts: () => void
-    addProduct: (title: string, price: number, description: string, category: string, imageUrl?: string) => Promise<boolean>
+    addProduct: (title: string, price: number, description: string, category: string, imageUrl?: string, contactType?: string, contactValue?: string) => Promise<boolean>
 }
 
 const MarketContext = createContext<MarketContextType | undefined>(undefined)
@@ -52,12 +52,12 @@ export function MarketProvider({ children }: { children: React.ReactNode }) {
         fetchProducts()
     }, [])
 
-    const addProduct = async (title: string, price: number, description: string, category: string, imageUrl?: string) => {
+    const addProduct = async (title: string, price: number, description: string, category: string, imageUrl?: string, contactType?: string, contactValue?: string) => {
         try {
             const res = await fetch('/api/products', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title, price, description, category, imageUrl })
+                body: JSON.stringify({ title, price, description, category, imageUrl, contactType, contactValue })
             })
             if (res.ok) {
                 fetchProducts()

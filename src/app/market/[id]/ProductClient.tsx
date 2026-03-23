@@ -6,10 +6,9 @@ import styled from 'styled-components'
 import Image from 'next/image'
 import { useParams, useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
-import { ChevronLeft, Share, Heart, Trash2 } from 'lucide-react'
+import { ChevronLeft, Share, Heart, Trash2, Copy, ExternalLink } from 'lucide-react'
 import ConfirmModal from '@/components/ui/ConfirmModal'
 import Toast from '@/components/ui/Toast'
-import { useChat } from '@/contexts/ChatContext'
 import { toast as sonnerToast } from 'sonner'
 
 const Container = styled.div`
@@ -210,8 +209,6 @@ export default function ProductClient() {
     const params = useParams()
     const router = useRouter()
     const { data: session } = useSession()
-    const { openChatWithUser } = useChat()
-
     const [product, setProduct] = useState<any>(null)
     const [loading, setLoading] = useState(true)
     const [isSeller, setIsSeller] = useState(false)
@@ -371,15 +368,30 @@ export default function ProductClient() {
                         )}
                     </SellerControls>
                 ) : (
-                    <ChatButton
-                        disabled={product.status !== 'SELLING'}
-                        onClick={() => {
-                            if (!session) { router.push('/login'); return }
-                            openChatWithUser(product.sellerId)
-                        }}
-                    >
-                        {product.status === 'SELLING' ? '채팅하기' : '거래 종료'}
-                    </ChatButton>
+                    product.contactValue ? (
+                        <ChatButton
+                            disabled={product.status !== 'SELLING'}
+                            onClick={() => {
+                                if (product.status !== 'SELLING') return
+                                if (product.contactType === 'LINK') {
+                                    window.open(product.contactValue, '_blank', 'noopener,noreferrer')
+                                } else {
+                                    navigator.clipboard.writeText(product.contactValue).then(() => {
+                                        const label = product.contactType === 'KAKAO' ? '카카오톡 ID' : '이메일'
+                                        sonnerToast.success(`${label}가 복사되었습니다.`)
+                                    })
+                                }
+                            }}
+                        >
+                            {product.status !== 'SELLING' ? '거래 종료' : (
+                                product.contactType === 'LINK' ? <><ExternalLink size={16} /> 링크로 이동</> :
+                                product.contactType === 'KAKAO' ? <><Copy size={16} /> 카카오톡 ID 복사</> :
+                                <><Copy size={16} /> 이메일 복사</>
+                            )}
+                        </ChatButton>
+                    ) : (
+                        <ChatButton disabled>연락처 없음</ChatButton>
+                    )
                 )}
             </BottomBar>
 
