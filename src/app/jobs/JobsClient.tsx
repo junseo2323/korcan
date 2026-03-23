@@ -5,6 +5,7 @@ import styled, { keyframes } from 'styled-components'
 import { Search, MapPin, ExternalLink, Briefcase, X, Calendar, Tag, ChevronRight } from 'lucide-react'
 import { formatDistanceToNow, format } from 'date-fns'
 import { ko } from 'date-fns/locale'
+import { APIProvider, Map, AdvancedMarker, useMapsLibrary } from '@vis.gl/react-google-maps'
 
 const REGIONS = [
   { value: '', label: '전체 지역' },
@@ -347,6 +348,47 @@ const ApplyBtn = styled.a`
   &:active { opacity: 0.8; }
 `
 
+const MapWrapper = styled.div`
+  margin-top: 1rem;
+  height: 200px;
+  border-radius: 12px;
+  overflow: hidden;
+`
+
+// ─── JobMap (geocodes location string → displays map) ─────────────────────────
+
+function JobMap({ location }: { location: string }) {
+  const geocodingLib = useMapsLibrary('geocoding')
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null)
+
+  useEffect(() => {
+    if (!geocodingLib || !location) return
+    const geocoder = new geocodingLib.Geocoder()
+    geocoder.geocode({ address: location + ', Canada' }, (results, status) => {
+      if (status === 'OK' && results?.[0]) {
+        const loc = results[0].geometry.location
+        setCoords({ lat: loc.lat(), lng: loc.lng() })
+      }
+    })
+  }, [geocodingLib, location])
+
+  if (!coords) return null
+
+  return (
+    <MapWrapper>
+      <Map
+        defaultCenter={coords}
+        defaultZoom={13}
+        mapId="JOB_MAP"
+        disableDefaultUI={true}
+        gestureHandling="cooperative"
+      >
+        <AdvancedMarker position={coords} />
+      </Map>
+    </MapWrapper>
+  )
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function JobsClient() {
@@ -473,6 +515,7 @@ export default function JobsClient() {
       {/* Job Detail Modal */}
       {selectedJob && (
         <Overlay onClick={() => setSelectedJob(null)}>
+          <APIProvider apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ''}>
           <Sheet onClick={e => e.stopPropagation()}>
             <SheetHandle />
             <SheetHeader>
@@ -534,12 +577,17 @@ export default function JobsClient() {
                 <Description>{selectedJob.description.replace(/<[^>]+>/g, '').trim()}</Description>
               )}
 
+              {selectedJob.location && (
+                <JobMap location={selectedJob.location} />
+              )}
+
               <ApplyBtn href={selectedJob.url} target="_blank" rel="noopener noreferrer">
                 <ExternalLink size={18} />
                 지원하기
               </ApplyBtn>
             </SheetBody>
           </Sheet>
+          </APIProvider>
         </Overlay>
       )}
     </PageContainer>
