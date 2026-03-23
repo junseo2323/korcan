@@ -1,6 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import { useSession } from 'next-auth/react'
 
 export interface Product {
     id: string
@@ -23,6 +24,8 @@ export interface Product {
 
 interface MarketContextType {
     products: Product[]
+    regionFilter: string
+    setRegionFilter: (r: string) => void
     refreshProducts: () => void
     addProduct: (title: string, price: number, description: string, category: string, imageUrl?: string, contactType?: string, contactValue?: string) => Promise<boolean>
 }
@@ -30,27 +33,39 @@ interface MarketContextType {
 const MarketContext = createContext<MarketContextType | undefined>(undefined)
 
 export function MarketProvider({ children }: { children: React.ReactNode }) {
+    const { data: session } = useSession()
+    const userRegion = (session?.user as any)?.region as string | undefined
+
+    const [regionFilter, setRegionFilter] = useState<string>('All')
+    const [regionInitialized, setRegionInitialized] = useState(false)
     const [products, setProducts] = useState<Product[]>([])
 
-    const fetchProducts = async () => {
+    // 세션 로드 완료 후 유저 지역으로 초기화 (최초 1회)
+    useEffect(() => {
+        if (!regionInitialized && userRegion) {
+            setRegionFilter(userRegion)
+            setRegionInitialized(true)
+        }
+    }, [userRegion, regionInitialized])
+
+    const fetchProducts = useCallback(async (region: string) => {
         try {
-            const res = await fetch('/api/products')
-            if (res.ok) {
-                const data = await res.json()
-                setProducts(data)
-            }
+            const params = new URLSearchParams()
+            if (region && region !== 'All') params.set('region', region)
+            const res = await fetch(`/api/products?${params.toString()}`)
+            if (res.ok) setProducts(await res.json())
         } catch (e) {
             console.error(e)
         }
-    }
+    }, [])
 
     useEffect(() => {
-        fetchProducts()
-    }, [])
+        fetchProducts(regionFilter)
+    }, [regionFilter, fetchProducts])
 
     const refreshProducts = useCallback(() => {
-        fetchProducts()
-    }, [])
+        fetchProducts(regionFilter)
+    }, [regionFilter, fetchProducts])
 
     const addProduct = async (title: string, price: number, description: string, category: string, imageUrl?: string, contactType?: string, contactValue?: string) => {
         try {
@@ -60,7 +75,7 @@ export function MarketProvider({ children }: { children: React.ReactNode }) {
                 body: JSON.stringify({ title, price, description, category, imageUrl, contactType, contactValue })
             })
             if (res.ok) {
-                fetchProducts()
+                fetchProducts(regionFilter)
                 return true
             }
             return false
@@ -71,7 +86,7 @@ export function MarketProvider({ children }: { children: React.ReactNode }) {
     }
 
     return (
-        <MarketContext.Provider value={{ products, refreshProducts, addProduct }}>
+        <MarketContext.Provider value={{ products, regionFilter, setRegionFilter, refreshProducts, addProduct }}>
             {children}
         </MarketContext.Provider>
     )

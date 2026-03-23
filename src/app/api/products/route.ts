@@ -4,12 +4,17 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 
 // GET /api/products
-// Optional query: ?category=Value
+// Optional query: ?category=Value&region=Toronto
 export async function GET(req: Request) {
     const { searchParams } = new URL(req.url)
     const category = searchParams.get('category')
+    const region = searchParams.get('region')
 
-    const where = category && category !== 'All' ? { category } : {}
+    const where: any = {}
+    if (category && category !== 'All') where.category = category
+    if (region && region !== 'All') {
+        where.seller = { region }
+    }
 
     try {
         const products = await prisma.product.findMany({

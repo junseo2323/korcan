@@ -223,7 +223,7 @@ import { Suspense } from 'react'
 function MarketPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { products } = useMarket()
+  const { products, regionFilter, setRegionFilter } = useMarket()
 
   // Initialize activeTab based on URL query param
   const initialTab = searchParams?.get('tab') === 'REAL_ESTATE' ? 'REAL_ESTATE' : 'PRODUCTS'
@@ -289,6 +289,19 @@ function MarketPageContent() {
             부동산
           </Tab>
         </TabContainer>
+        {activeTab === 'PRODUCTS' && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', paddingTop: '0.5rem', fontSize: '0.85rem' }}>
+            <span style={{ color: '#6B7280' }}>
+              {regionFilter === 'All' ? '전체 지역' : regionFilter}
+            </span>
+            <button
+              onClick={() => setRegionFilter(regionFilter === 'All' ? '' : 'All')}
+              style={{ fontSize: '0.8rem', color: '#3B82F6', background: 'none', border: 'none', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
+            >
+              {regionFilter === 'All' ? '내 지역만 보기' : '전체보기'}
+            </button>
+          </div>
+        )}
       </Header>
 
       <ContentArea>

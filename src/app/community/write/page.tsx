@@ -179,7 +179,12 @@ function WritePostContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { addPost, updatePost } = usePosts()
-  const { data: session } = useSession()
+  const { data: session, update: updateSession } = useSession()
+
+  // JWT 캐시된 region이 DB와 다를 수 있으므로 마운트 시 세션 갱신
+  useEffect(() => {
+    updateSession()
+  }, [])
 
   const type = searchParams.get('type') || 'board' // 'board' | 'meetup'
   const isMeetup = type === 'meetup'
