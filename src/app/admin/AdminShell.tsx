@@ -4,10 +4,11 @@ import React, { useState } from 'react'
 import styled from 'styled-components'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Users, FileText, MessageSquare, Megaphone, LayoutGrid, Menu, X, ChevronRight } from 'lucide-react'
+import { LayoutDashboard, Users, FileText, MessageSquare, Megaphone, LayoutGrid, Menu, X, ChevronRight, BarChart2 } from 'lucide-react'
 
 const navItems = [
     { href: '/admin', label: '개요', icon: LayoutDashboard, exact: true },
+    { href: '/admin/analytics', label: '애널리틱스', icon: BarChart2 },
     { href: '/admin/users', label: '사용자', icon: Users },
     { href: '/admin/posts', label: '콘텐츠 관리', icon: FileText },
     { href: '/admin/chats', label: '채팅 내역', icon: MessageSquare },
