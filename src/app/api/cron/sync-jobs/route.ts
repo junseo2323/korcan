@@ -131,7 +131,7 @@ const CANKOR_CITY_MAP: Record<string, string> = {
 async function fetchCanKorJobs(): Promise<{ items: any[], error?: string }> {
   try {
     const res = await fetch(
-      `${CANKOR_URL}?select=id,title,company_name,description,service_city,city,province,employment_type,pay_type,pay_min,pay_max,apply_email,apply_phone,apply_link,created_at&status=eq.open&limit=500`,
+      `${CANKOR_URL}?select=id,title,company_name,description,service_city,city,province,address,employment_type,pay_type,pay_min,pay_max,apply_email,apply_phone,apply_link,created_at&status=eq.open&limit=500`,
       { headers: { apikey: CANKOR_KEY, Authorization: `Bearer ${CANKOR_KEY}` } }
     )
     if (!res.ok) return { items: [], error: `cankorjobs: HTTP ${res.status}` }
@@ -144,7 +144,7 @@ async function fetchCanKorJobs(): Promise<{ items: any[], error?: string }> {
 function parseCanKorJobsItem(item: any) {
   const serviceCity = item.service_city?.toLowerCase() || ''
   const region = CANKOR_CITY_MAP[serviceCity] || 'on'
-  const location = [item.city, item.province].filter(Boolean).join(', ') || item.service_city || null
+  const location = [item.address, item.city, item.province].filter(Boolean).join(', ') || item.service_city || null
 
   let salary: string | null = null
   if (item.pay_min > 0 || item.pay_max > 0) {
@@ -224,7 +224,7 @@ async function upsertJobs(jobs: any[], upserted: { n: number }, errors: { n: num
     try {
       await prisma.job.upsert({
         where: { externalId: job.externalId },
-        update: { fetchedAt: job.fetchedAt, active: true },
+        update: { fetchedAt: job.fetchedAt, active: true, location: job.location },
         create: job,
       })
       upserted.n++
