@@ -2,7 +2,7 @@
 
 import React from 'react'
 import styled from 'styled-components'
-import { LogOut, Heart } from 'lucide-react'
+import { LogOut, Heart, UserCircle } from 'lucide-react'
 import { signOut } from 'next-auth/react'
 import Link from 'next/link'
 
@@ -105,6 +105,10 @@ export default function ProfilePopover({ user, onClose }: ProfilePopoverProps) {
         <UserEmail>{user.email || '이메일 없음'}</UserEmail>
       </UserInfo>
       <Menu>
+        <MenuLink href="/my/profile" onClick={onClose}>
+          <UserCircle size={18} />
+          내 프로필
+        </MenuLink>
         <MenuLink href="/my/likes" onClick={onClose}>
           <Heart size={18} />
           찜한 매물
