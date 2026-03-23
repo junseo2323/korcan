@@ -88,7 +88,7 @@ export default function RootLayout({
             }),
           }}
         />
-        <GoogleAnalytics gaId="G-C6LJTH0WHF" />
+        {process.env.NODE_ENV === 'production' && <GoogleAnalytics gaId="G-C6LJTH0WHF" />}
       </body>
     </html>
   )
