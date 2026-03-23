@@ -6,11 +6,10 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useMarket } from '@/contexts/MarketContext'
-import { Plus, Heart, Map as MapIcon, Grid } from 'lucide-react'
+import { Plus, Heart } from 'lucide-react'
 import PropertyMap from '@/components/real-estate/PropertyMap'
 import PropertyCard from '@/components/real-estate/PropertyCard'
-import { Button } from '@/components/design-system/Button'
-import { Text } from '@/components/design-system/Typography'
+import { useSession } from 'next-auth/react'
 
 const Container = styled.div`
   display: flex;
@@ -53,6 +52,34 @@ const WriteButton = styled.button`
   gap: 0.5rem;
   cursor: pointer;
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+`
+
+const RegionToggleGroup = styled.div`
+  display: flex;
+  align-items: center;
+  margin-top: 0.5rem;
+`
+
+const RegionToggleButton = styled.button<{ $active: boolean }>`
+  background-color: ${({ theme, $active }) => $active ? theme.colors.primary : 'transparent'};
+  color: ${({ theme, $active }) => $active ? 'white' : theme.colors.text.secondary};
+  border: 1px solid ${({ theme, $active }) => $active ? theme.colors.primary : theme.colors.neutral.gray300};
+  border-radius: 6px;
+  padding: 4px 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:first-child {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    border-right: none;
+  }
+  &:last-child {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+  }
 `
 
 const TabContainer = styled.div`
@@ -218,13 +245,11 @@ const Meta = styled.div`
 
 import { Suspense } from 'react'
 
-// ... imports remain the same
-
-// ... styled components remain the same
-
 function MarketPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { data: session } = useSession()
+  const userRegion = (session?.user as any)?.region as string | undefined
   const { products, regionFilter, setRegionFilter } = useMarket()
 
   // Initialize activeTab based on URL query param
@@ -292,18 +317,20 @@ function MarketPageContent() {
           </Tab>
         </TabContainer>
         {activeTab === 'PRODUCTS' && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', paddingTop: '0.5rem' }}>
-            <Text variant="caption" color="var(--color-text-secondary, #6B7280)">
-              {regionFilter === 'All' ? '전체 지역' : regionFilter}
-            </Text>
-            <Button
-              variant="outline"
-              size="small"
-              onClick={() => setRegionFilter(regionFilter === 'All' ? '' : 'All')}
+          <RegionToggleGroup>
+            <RegionToggleButton
+              $active={regionFilter === 'All'}
+              onClick={() => setRegionFilter('All')}
             >
-              {regionFilter === 'All' ? '내 지역만 보기' : '전체보기'}
-            </Button>
-          </div>
+              전체보기
+            </RegionToggleButton>
+            <RegionToggleButton
+              $active={regionFilter !== 'All'}
+              onClick={() => setRegionFilter(userRegion || 'All')}
+            >
+              내 지역만
+            </RegionToggleButton>
+          </RegionToggleGroup>
         )}
       </Header>
 

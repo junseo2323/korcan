@@ -23,24 +23,14 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         const fetchRate = async () => {
             try {
-                // Using a free exchange rate API (No key required for this specific endpoint usually, or uses public rate)
-                // Alternative: https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/cad.json
-                const res = await fetch('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/cad.json')
-
+                const res = await fetch('https://open.er-api.com/v6/latest/CAD')
                 if (res.ok) {
                     const data = await res.json()
-                    // data.cad.krw
-                    const rate = data.cad.krw
-                    if (rate) {
-                        setExchangeRate(rate)
-                        console.log(`Updated Exchange Rate: 1 CAD = ${rate} KRW`)
-                    }
-                } else {
-                    console.error('Exchange rate API error')
+                    const rate = data.rates?.KRW
+                    if (rate) setExchangeRate(rate)
                 }
             } catch (e) {
                 console.error('Failed to fetch rate, using default', e)
-                // Fallback is already set
             }
         }
         fetchRate()
