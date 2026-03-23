@@ -100,8 +100,12 @@ const FixedButtonWrapper = styled.div`
   background-color: white;
   border-top: 1px solid ${({ theme }) => theme.colors.neutral.gray200};
   z-index: 800;
-  max-width: 600px; /* Match Container max-width if centered, or just 100% and centered content */
-  margin: 0 auto; /* To center inside the viewport if desktop */
+  max-width: 600px;
+  margin: 0 auto;
+
+  @media (min-width: 768px) {
+    bottom: 0;
+  }
 `
 
 const SubmitButton = styled.button`

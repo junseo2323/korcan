@@ -177,7 +177,11 @@ const SellerName = styled.div`
 
 const ContactBar = styled.div`
   position: fixed;
-  bottom: 90px;
+  bottom: calc(90px + env(safe-area-inset-bottom));
+
+  @media (min-width: 768px) {
+    bottom: 1.5rem;
+  }
   left: 24px;
   right: 24px;
   z-index: 100;

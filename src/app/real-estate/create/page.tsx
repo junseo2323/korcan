@@ -138,13 +138,17 @@ const MapPreviewWrapper = styled.div`
 
 const FixedButtonWrapper = styled.div`
   position: fixed;
-  bottom: 60px;
+  bottom: calc(60px + env(safe-area-inset-bottom));
   left: 0;
   right: 0;
   padding: 1rem;
   background-color: white;
   border-top: 1px solid ${({ theme }) => theme.colors.border.primary};
   z-index: 100;
+
+  @media (min-width: 768px) {
+    bottom: 0;
+  }
   max-width: 600px;
   margin: 0 auto;
 `

@@ -17,6 +17,10 @@ const Container = styled.div`
   padding-bottom: 90px;
   background-color: white;
   min-height: 100vh;
+
+  @media (min-width: 768px) {
+    padding-bottom: 5rem;
+  }
 `
 
 const ImageArea = styled.div`
@@ -140,6 +144,10 @@ const BottomBar = styled.div`
   background-color: white;
   border-top: 1px solid ${({ theme }) => theme.colors.border.primary};
   display: flex;
+
+  @media (min-width: 768px) {
+    bottom: 0;
+  }
   align-items: center;
   justify-content: space-between;
   z-index: 1000;

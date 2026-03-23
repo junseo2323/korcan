@@ -15,7 +15,11 @@ const fadeOut = keyframes`
 
 const ToastContainer = styled.div<{ $isClosing: boolean }>`
   position: fixed;
-  bottom: 140px; /* Above CommentInput (60px + safe area) + Nav */
+  bottom: 140px;
+
+  @media (min-width: 768px) {
+    bottom: 2rem;
+  }
   left: 50%;
   transform: translateX(-50%);
   background-color: rgba(33, 33, 33, 0.9);
