@@ -449,7 +449,7 @@ export default function JobsClient() {
                   <MetaLeft>
                     {job.company && <MetaItem><Briefcase size={13} />{job.company}</MetaItem>}
                     {job.location && <MetaItem><MapPin size={13} />{job.location}</MetaItem>}
-                    {job.salary && <MetaItem>💰 {job.salary}</MetaItem>}
+                    <MetaItem>💰 {job.salary || '협의 후 결정'}</MetaItem>
                   </MetaLeft>
                   <MetaRight>
                     {job.postedAt && (
@@ -503,13 +503,11 @@ export default function JobsClient() {
                   <span>{selectedJob.location}</span>
                 </DetailRow>
               )}
-              {selectedJob.salary && (
-                <DetailRow>
-                  <span style={{ fontSize: '1rem' }}>💰</span>
-                  <DetailLabel>급여</DetailLabel>
-                  <span>{selectedJob.salary}</span>
-                </DetailRow>
-              )}
+              <DetailRow>
+                <span style={{ fontSize: '1rem' }}>💰</span>
+                <DetailLabel>급여</DetailLabel>
+                <span>{selectedJob.salary || '협의 후 결정'}</span>
+              </DetailRow>
               {selectedJob.jobType && (
                 <DetailRow>
                   <Tag size={16} />
