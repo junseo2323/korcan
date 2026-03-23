@@ -80,6 +80,7 @@ interface Meetup {
     region: string
     currentMembers: number
     maxMembers: number
+    posts?: { id: string }[]
 }
 
 export default function MeetupRecommendationBlock({ meetups }: { meetups: Meetup[] }) {
@@ -95,7 +96,7 @@ export default function MeetupRecommendationBlock({ meetups }: { meetups: Meetup
             </Header>
             <ScrollContainer>
                 {meetups.map(meetup => (
-                    <Card key={meetup.id} onClick={() => router.push('/community?tab=MEETUP')}>
+                    <Card key={meetup.id} onClick={() => router.push(meetup.posts?.[0]?.id ? `/community/${meetup.posts[0].id}` : '/community?tab=MEETUP')}>
                         <CardTitle>{meetup.title}</CardTitle>
                         <InfoRow>
                             <Calendar size={14} />

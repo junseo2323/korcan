@@ -31,13 +31,15 @@ async function getData() {
     }
   })
 
-  // 2. Recent Meetups
+  // 2. Recent Meetups (only those with an existing post)
   const recentMeetups = await prisma.meetup.findMany({
     take: 4,
     orderBy: { createdAt: 'desc' },
+    where: { posts: { some: {} } },
     select: {
       id: true, title: true, date: true, region: true,
-      maxMembers: true, currentMembers: true, image: true
+      maxMembers: true, currentMembers: true, image: true,
+      posts: { select: { id: true }, take: 1 }
     }
   })
 
