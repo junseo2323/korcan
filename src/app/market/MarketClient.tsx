@@ -9,6 +9,8 @@ import { useMarket } from '@/contexts/MarketContext'
 import { Plus, Heart, Map as MapIcon, Grid } from 'lucide-react'
 import PropertyMap from '@/components/real-estate/PropertyMap'
 import PropertyCard from '@/components/real-estate/PropertyCard'
+import { Button } from '@/components/design-system/Button'
+import { Text } from '@/components/design-system/Typography'
 
 const Container = styled.div`
   display: flex;
@@ -290,16 +292,17 @@ function MarketPageContent() {
           </Tab>
         </TabContainer>
         {activeTab === 'PRODUCTS' && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', paddingTop: '0.5rem', fontSize: '0.85rem' }}>
-            <span style={{ color: '#6B7280' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', paddingTop: '0.5rem' }}>
+            <Text variant="caption" color="var(--color-text-secondary, #6B7280)">
               {regionFilter === 'All' ? '전체 지역' : regionFilter}
-            </span>
-            <button
+            </Text>
+            <Button
+              variant="outline"
+              size="small"
               onClick={() => setRegionFilter(regionFilter === 'All' ? '' : 'All')}
-              style={{ fontSize: '0.8rem', color: '#3B82F6', background: 'none', border: 'none', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
             >
               {regionFilter === 'All' ? '내 지역만 보기' : '전체보기'}
-            </button>
+            </Button>
           </div>
         )}
       </Header>
