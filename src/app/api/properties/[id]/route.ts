@@ -45,7 +45,11 @@ export async function PUT(request: Request, props: { params: Promise<{ id: strin
     if (property.userId !== session.user.id) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
     try {
-        const { images, ...fields } = body
+        const { images, features, ...rest } = body
+        const fields = {
+            ...rest,
+            ...(features !== undefined && { features: Array.isArray(features) ? features.join(',') : features }),
+        }
 
         await prisma.$transaction(async (tx) => {
             await tx.property.update({ where: { id }, data: fields })
