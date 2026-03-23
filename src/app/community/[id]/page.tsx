@@ -27,18 +27,25 @@ export async function generateMetadata(
     }
   }
 
-  const imageUrl = post.images && post.images.length > 0 ? post.images[0].url : undefined
+  const imageUrl = post.images && post.images.length > 0 ? post.images[0].url : 'https://korcan.cc/opengraph-image'
+  const description = post.content.slice(0, 160).replace(/\n/g, ' ')
 
   return {
     title: post.title,
-    description: post.content.slice(0, 160).replace(/\n/g, ' '),
+    description,
     alternates: { canonical: `https://korcan.cc/community/${id}` },
     openGraph: {
       title: post.title,
-      description: post.content.slice(0, 160).replace(/\n/g, ' '),
-      images: imageUrl ? [imageUrl] : [],
+      description,
+      images: [{ url: imageUrl, width: 1200, height: 630 }],
       type: 'article',
-    }
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: post.title,
+      description,
+      images: [imageUrl],
+    },
   }
 }
 

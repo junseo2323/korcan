@@ -19,11 +19,13 @@ export const metadata: Metadata = {
     siteName: 'KorCan',
     locale: 'ko_KR',
     type: 'website',
+    images: [{ url: 'https://korcan.cc/opengraph-image', width: 1200, height: 630, alt: 'KorCan - 캐나다 한인 커뮤니티' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'KorCan - 캐나다 한인 커뮤니티',
     description: '캐나다 생활의 모든 것, KorCan에서 시작하세요.',
+    images: ['https://korcan.cc/opengraph-image'],
   },
   manifest: '/manifest.json',
   icons: {

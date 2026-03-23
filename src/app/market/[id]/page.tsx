@@ -26,16 +26,25 @@ export async function generateMetadata(
     }
   }
 
+  const imageUrl = product.imageUrl ?? 'https://korcan.cc/opengraph-image'
+  const description = product.description.slice(0, 160).replace(/\n/g, ' ')
+
   return {
     title: product.title,
-    description: product.description.slice(0, 160).replace(/\n/g, ' '),
+    description,
     alternates: { canonical: `https://korcan.cc/market/${id}` },
     openGraph: {
       title: product.title,
-      description: product.description.slice(0, 160).replace(/\n/g, ' '),
-      images: product.imageUrl ? [product.imageUrl] : [],
+      description,
+      images: [{ url: imageUrl, width: 1200, height: 630 }],
       type: 'website',
-    }
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: product.title,
+      description,
+      images: [imageUrl],
+    },
   }
 }
 

@@ -30,7 +30,7 @@ export async function generateMetadata(
     }
   }
 
-  const imageUrl = property.images?.[0]?.url
+  const imageUrl = property.images?.[0]?.url ?? 'https://korcan.cc/opengraph-image'
   const description = property.description.slice(0, 160).replace(/\n/g, ' ')
 
   return {
@@ -40,8 +40,14 @@ export async function generateMetadata(
     openGraph: {
       title: property.title,
       description,
-      images: imageUrl ? [imageUrl] : [],
+      images: [{ url: imageUrl, width: 1200, height: 630 }],
       type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: property.title,
+      description,
+      images: [imageUrl],
     },
   }
 }
