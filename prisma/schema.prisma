@@ -323,9 +323,11 @@ model Property {
   latitude    Float
   longitude   Float
   region      String
-  features    String?  // Comma separated e.g. "Wifi,Parking"
-  status      String   @default("AVAILABLE") // AVAILABLE, RENTED, SOLD
-  
+  features     String?  // Comma separated e.g. "Wifi,Parking"
+  status       String   @default("AVAILABLE") // AVAILABLE, RENTED, SOLD
+  contactType  String?  // LINK, KAKAO, EMAIL
+  contactValue String?  // URL, KakaoTalk ID, or email address
+
   userId      String
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 

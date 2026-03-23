@@ -245,6 +245,10 @@ export default function CreatePropertyPage() {
     const [confirmedAddress, setConfirmedAddress] = useState('')
     const [location, setLocation] = useState<{ lat: number, lng: number } | null>(null)
 
+    // Contact
+    const [contactType, setContactType] = useState('KAKAO')
+    const [contactValue, setContactValue] = useState('')
+
     // Features
     const [features, setFeatures] = useState<string[]>([])
     const [featureInput, setFeatureInput] = useState('')
@@ -284,6 +288,7 @@ export default function CreatePropertyPage() {
                     description, setDescription, region, setRegion, images, setImages,
                     addressInput, setAddressInput, confirmedAddress, setConfirmedAddress,
                     location, setLocation, features, removeFeature, featureInput, setFeatureInput, handleAddFeature,
+                    contactType, setContactType, contactValue, setContactValue,
                     loading, setLoading
                 }}
                 session={session}
@@ -367,7 +372,9 @@ function CreatePropertyFormContent({ state, session, router }: any) {
                 longitude: state.location.lng,
                 region: state.region,
                 features: state.features,
-                images: imageUrls
+                images: imageUrls,
+                contactType: state.contactType,
+                contactValue: state.contactValue,
             }
 
             const res = await fetch('/api/properties', {
@@ -512,6 +519,26 @@ function CreatePropertyFormContent({ state, session, router }: any) {
                             onKeyDown={state.handleAddFeature}
                         />
                     </TagInput>
+                </Section>
+
+                <Section>
+                    <Label>연락처</Label>
+                    <Row>
+                        <Select style={{ width: '140px' }} value={state.contactType} onChange={e => state.setContactType(e.target.value)}>
+                            <option value="KAKAO">카카오톡 ID</option>
+                            <option value="EMAIL">이메일</option>
+                            <option value="LINK">링크 (URL)</option>
+                        </Select>
+                        <Input
+                            placeholder={
+                                state.contactType === 'KAKAO' ? '카카오톡 아이디 입력' :
+                                state.contactType === 'EMAIL' ? '이메일 주소 입력' :
+                                'https://...'
+                            }
+                            value={state.contactValue}
+                            onChange={e => state.setContactValue(e.target.value)}
+                        />
+                    </Row>
                 </Section>
 
                 <Section>

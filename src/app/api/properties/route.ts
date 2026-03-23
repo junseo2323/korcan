@@ -94,7 +94,9 @@ export async function POST(request: Request) {
             longitude,
             region,
             features,
-            images
+            images,
+            contactType,
+            contactValue,
         } = body
 
         // Validation could be added here
@@ -114,6 +116,8 @@ export async function POST(request: Request) {
                 longitude,
                 region,
                 features: Array.isArray(features) ? features.join(',') : features,
+                contactType: contactType || null,
+                contactValue: contactValue || null,
                 userId: session.user.id,
                 images: {
                     create: images.map((url: string) => ({ url }))

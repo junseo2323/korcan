@@ -5,7 +5,7 @@ import styled from 'styled-components'
 import Image from 'next/image'
 import { useParams, useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
-import { ChevronLeft, Share2, Heart, MapPin, Bed, Bath, User } from 'lucide-react'
+import { ChevronLeft, Share2, Heart, MapPin, Bed, Bath, Copy, ExternalLink } from 'lucide-react'
 import { APIProvider, Map, AdvancedMarker } from '@vis.gl/react-google-maps'
 import { toast } from 'sonner'
 // import { format } from 'date-fns' // If needed
@@ -175,11 +175,18 @@ const SellerName = styled.div`
   font-weight: 600;
 `
 
-const ContactButton = styled.button`
+const ContactBar = styled.div`
   position: fixed;
   bottom: 90px;
   left: 24px;
   right: 24px;
+  z-index: 100;
+  display: flex;
+  gap: 0.5rem;
+`
+
+const ContactButton = styled.button`
+  flex: 1;
   background-color: ${({ theme }) => theme.colors.primary};
   color: white;
   border: none;
@@ -189,7 +196,10 @@ const ContactButton = styled.button`
   font-weight: 700;
   cursor: pointer;
   box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3);
-  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
 
   &:disabled {
     background-color: #9ca3af;
@@ -276,12 +286,20 @@ export default function PropertyClient() {
   }
 
   const handleContact = () => {
-    if (!session) {
-      toast.error("로그인이 필요합니다.")
-      router.push('/login')
+    const { contactType, contactValue } = property
+    if (!contactValue) {
+      toast.info("등록된 연락처가 없습니다.")
       return
     }
-    toast.info("채팅 기능 연결 중...")
+
+    if (contactType === 'LINK') {
+      window.open(contactValue, '_blank', 'noopener,noreferrer')
+    } else {
+      navigator.clipboard.writeText(contactValue).then(() => {
+        const label = contactType === 'KAKAO' ? '카카오톡 ID' : '이메일'
+        toast.success(`${label}가 복사되었습니다.`)
+      })
+    }
   }
 
   if (loading) return <div style={{ padding: '2rem' }}>Loading...</div>
@@ -383,9 +401,19 @@ export default function PropertyClient() {
           </div>
         </Content>
 
-        <ContactButton onClick={handleContact}>
-          {property.user?.name}님에게 연락하기
-        </ContactButton>
+        {property.contactValue && (
+          <ContactBar>
+            <ContactButton onClick={handleContact}>
+              {property.contactType === 'LINK' ? (
+                <><ExternalLink size={18} /> 링크로 이동</>
+              ) : property.contactType === 'KAKAO' ? (
+                <><Copy size={18} /> 카카오톡 ID 복사</>
+              ) : (
+                <><Copy size={18} /> 이메일 복사</>
+              )}
+            </ContactButton>
+          </ContactBar>
+        )}
       </Container>
     </APIProvider>
   )
