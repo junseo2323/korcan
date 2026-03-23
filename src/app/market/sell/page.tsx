@@ -291,12 +291,14 @@ export default function SellPage() {
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             <Select style={{ width: '140px' }} value={contactType} onChange={e => setContactType(e.target.value)}>
               <option value="KAKAO">카카오톡 ID</option>
+              <option value="PHONE">전화번호</option>
               <option value="EMAIL">이메일</option>
               <option value="LINK">링크 (URL)</option>
             </Select>
             <Input
               placeholder={
                 contactType === 'KAKAO' ? '카카오톡 아이디 입력' :
+                contactType === 'PHONE' ? '전화번호 입력' :
                 contactType === 'EMAIL' ? '이메일 주소 입력' :
                 'https://...'
               }

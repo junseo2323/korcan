@@ -296,7 +296,7 @@ export default function PropertyClient() {
       window.open(contactValue, '_blank', 'noopener,noreferrer')
     } else {
       navigator.clipboard.writeText(contactValue).then(() => {
-        const label = contactType === 'KAKAO' ? '카카오톡 ID' : '이메일'
+        const label = contactType === 'KAKAO' ? '카카오톡 ID' : contactType === 'PHONE' ? '전화번호' : '이메일'
         toast.success(`${label}가 복사되었습니다.`)
       })
     }
@@ -408,6 +408,8 @@ export default function PropertyClient() {
                 <><ExternalLink size={18} /> 링크로 이동</>
               ) : property.contactType === 'KAKAO' ? (
                 <><Copy size={18} /> 카카오톡 ID 복사</>
+              ) : property.contactType === 'PHONE' ? (
+                <><Copy size={18} /> 전화번호 복사</>
               ) : (
                 <><Copy size={18} /> 이메일 복사</>
               )}

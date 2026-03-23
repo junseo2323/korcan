@@ -377,7 +377,7 @@ export default function ProductClient() {
                                     window.open(product.contactValue, '_blank', 'noopener,noreferrer')
                                 } else {
                                     navigator.clipboard.writeText(product.contactValue).then(() => {
-                                        const label = product.contactType === 'KAKAO' ? '카카오톡 ID' : '이메일'
+                                        const label = product.contactType === 'KAKAO' ? '카카오톡 ID' : product.contactType === 'PHONE' ? '전화번호' : '이메일'
                                         sonnerToast.success(`${label}가 복사되었습니다.`)
                                     })
                                 }
@@ -386,6 +386,7 @@ export default function ProductClient() {
                             {product.status !== 'SELLING' ? '거래 종료' : (
                                 product.contactType === 'LINK' ? <><ExternalLink size={16} /> 링크로 이동</> :
                                 product.contactType === 'KAKAO' ? <><Copy size={16} /> 카카오톡 ID 복사</> :
+                                product.contactType === 'PHONE' ? <><Copy size={16} /> 전화번호 복사</> :
                                 <><Copy size={16} /> 이메일 복사</>
                             )}
                         </ChatButton>
