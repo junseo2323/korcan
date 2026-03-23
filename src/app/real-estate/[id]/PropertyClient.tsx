@@ -5,7 +5,7 @@ import styled from 'styled-components'
 import Image from 'next/image'
 import { useParams, useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
-import { ChevronLeft, Share2, Heart, MapPin, Bed, Bath, Copy, ExternalLink } from 'lucide-react'
+import { ChevronLeft, Share2, Heart, MapPin, Bed, Bath, Copy, ExternalLink, Pencil, Trash2 } from 'lucide-react'
 import { APIProvider, Map, AdvancedMarker } from '@vis.gl/react-google-maps'
 import { toast } from 'sonner'
 // import { format } from 'date-fns' // If needed
@@ -272,6 +272,17 @@ export default function PropertyClient() {
     }
   }
 
+  const handleDelete = async () => {
+    if (!confirm('정말 삭제하시겠습니까?')) return
+    const res = await fetch(`/api/properties/${params.id}`, { method: 'DELETE' })
+    if (res.ok) {
+      toast.success('매물이 삭제되었습니다.')
+      router.push('/market?tab=REAL_ESTATE')
+    } else {
+      toast.error('삭제에 실패했습니다.')
+    }
+  }
+
   const handleShare = async () => {
     const url = window.location.href
     const priceStr = `${property.currency === 'CAD' ? '$' : '₩'}${property.price.toLocaleString()}/월`
@@ -320,6 +331,16 @@ export default function PropertyClient() {
               <ChevronLeft size={24} />
             </IconButton>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
+              {session?.user?.id === property?.user?.id && (
+                <>
+                  <IconButton onClick={() => router.push(`/real-estate/${params.id}/edit`)}>
+                    <Pencil size={18} />
+                  </IconButton>
+                  <IconButton onClick={handleDelete}>
+                    <Trash2 size={18} color="#ef4444" />
+                  </IconButton>
+                </>
+              )}
               <IconButton onClick={handleShare}>
                 <Share2 size={20} />
               </IconButton>
