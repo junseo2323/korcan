@@ -398,6 +398,7 @@ model Job {
   description String?
   url         String
   salary      String?
+  salaryMin   Float?
   jobType     String?
   category    String?
   postedAt    DateTime?
@@ -406,6 +407,7 @@ model Job {
 
   @@index([region, active])
   @@index([source, active])
+  @@index([salaryMin])
 }
 
 // PWA Push Subscriptions

@@ -4,6 +4,23 @@ import Parser from 'rss-parser'
 
 export const dynamic = 'force-dynamic'
 
+/** 급여 문자열에서 연봉 기준 최솟값 추출 (숫자 없으면 null) */
+function extractSalaryMin(salaryStr: string | null | undefined): number | null {
+  if (!salaryStr) return null
+  const lower = salaryStr.toLowerCase()
+  // "$23.00 hourly..." 또는 "/hr" 형태 → 연봉 환산
+  const isHourly = lower.includes('hour') || lower.includes('/hr')
+  const match = salaryStr.match(/\$?([\d,]+\.?\d*)/)
+  if (!match) return null
+  const num = parseFloat(match[1].replace(',', ''))
+  if (isNaN(num) || num <= 0) return null
+  // k 단위 (예: "$50k")
+  if (lower.includes('k') && num < 1000) return num * 1000
+  // 시급이면 연봉으로 환산 (2080h/년)
+  if (isHourly) return num * 2080
+  return num
+}
+
 const parser = new Parser({
   headers: {
     'User-Agent': 'Mozilla/5.0 (compatible; KorCan/1.0; +https://korcan.cc)',
@@ -54,6 +71,7 @@ function parseJobBankItem(item: any, region: string) {
     description: null,
     url,
     salary,
+    salaryMin: extractSalaryMin(salary),
     jobType: null,
     category: null,
     postedAt: item.pubDate ? new Date(item.pubDate) : item.isoDate ? new Date(item.isoDate) : null,
@@ -104,6 +122,7 @@ function parseAdzunaItem(item: any) {
     salary: item.salary_min
       ? `$${Math.round(item.salary_min / 1000)}k${item.salary_max ? `–$${Math.round(item.salary_max / 1000)}k` : '+'}`
       : null,
+    salaryMin: item.salary_min || null,
     jobType: item.contract_time === 'full_time' ? 'FULL_TIME' : item.contract_time === 'part_time' ? 'PART_TIME' : null,
     category: item.category?.label || null,
     postedAt: item.created ? new Date(item.created) : null,
@@ -147,10 +166,15 @@ function parseCanKorJobsItem(item: any) {
   const location = [item.address, item.city, item.province].filter(Boolean).join(', ') || item.service_city || null
 
   let salary: string | null = null
+  let salaryMin: number | null = null
   if (item.pay_min > 0 || item.pay_max > 0) {
     salary = item.pay_min > 0 && item.pay_max > 0
       ? `$${item.pay_min}–$${item.pay_max}`
       : item.pay_min > 0 ? `$${item.pay_min}+` : null
+    const rawMin = item.pay_min > 0 ? item.pay_min : null
+    if (rawMin) {
+      salaryMin = item.pay_type === 'hourly' ? rawMin * 2080 : rawMin
+    }
   }
 
   const applyUrl = item.apply_link
@@ -167,6 +191,7 @@ function parseCanKorJobsItem(item: any) {
     description: item.description || null,
     url: applyUrl,
     salary,
+    salaryMin,
     jobType: item.employment_type === 'full_time' ? 'FULL_TIME'
            : item.employment_type === 'part_time' ? 'PART_TIME' : null,
     category: '한인업체',
@@ -201,6 +226,7 @@ function parseRemoteOKItem(item: any) {
   return {
     externalId: `remoteok_${item.id || item.slug}`,
     source: 'remoteok',
+
     title: item.position || '',
     company: item.company || null,
     location: item.location || 'Remote',
@@ -208,6 +234,7 @@ function parseRemoteOKItem(item: any) {
     description: item.description || null,
     url: item.url || `https://remoteok.com/remote-jobs/${item.slug}`,
     salary,
+    salaryMin: item.salary_min || null,
     jobType: 'FULL_TIME',
     category: Array.isArray(item.tags) ? item.tags[0] || null : null,
     postedAt: item.date ? new Date(item.date) : null,
@@ -224,7 +251,7 @@ async function upsertJobs(jobs: any[], upserted: { n: number }, errors: { n: num
     try {
       await prisma.job.upsert({
         where: { externalId: job.externalId },
-        update: { fetchedAt: job.fetchedAt, active: true, location: job.location },
+        update: { fetchedAt: job.fetchedAt, active: true, location: job.location, salaryMin: job.salaryMin },
         create: job,
       })
       upserted.n++

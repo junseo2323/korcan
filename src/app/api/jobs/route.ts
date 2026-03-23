@@ -8,6 +8,7 @@ export async function GET(req: NextRequest) {
   const region = searchParams.get('region') || ''
   const keyword = searchParams.get('keyword') || ''
   const source = searchParams.get('source') || ''
+  const minSalary = searchParams.get('minSalary')
   const page = parseInt(searchParams.get('page') || '1')
   const limit = 20
 
@@ -15,6 +16,7 @@ export async function GET(req: NextRequest) {
 
   if (region) where.region = region
   if (source) where.source = source
+  if (minSalary) where.salaryMin = { gte: parseFloat(minSalary) }
   if (keyword) {
     where.OR = [
       { title: { contains: keyword, mode: 'insensitive' } },

@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect, useCallback } from 'react'
 import styled, { keyframes } from 'styled-components'
-import { Search, MapPin, ExternalLink, Briefcase, X, Calendar, Tag, ChevronRight } from 'lucide-react'
+import { Search, MapPin, ExternalLink, Briefcase, X, Calendar, Tag, ChevronRight, Copy } from 'lucide-react'
+import { toast } from 'sonner'
 import { formatDistanceToNow, format } from 'date-fns'
 import { ko } from 'date-fns/locale'
 import { APIProvider, Map, AdvancedMarker, useMapsLibrary } from '@vis.gl/react-google-maps'
@@ -24,6 +25,14 @@ const SOURCES = [
   { value: 'adzuna', label: 'Adzuna' },
   { value: 'remoteok', label: 'RemoteOK' },
   { value: 'cankorjobs', label: '🇰🇷 한인' },
+]
+
+const SALARY_RANGES = [
+  { value: '',      label: '급여 전체' },
+  { value: '30000', label: '$30k+/년' },
+  { value: '50000', label: '$50k+/년' },
+  { value: '70000', label: '$70k+/년' },
+  { value: '100000', label: '$100k+/년' },
 ]
 
 const SOURCE_STYLE: Record<string, { bg: string; color: string; label: string }> = {
@@ -328,6 +337,26 @@ const Description = styled.div`
   overflow-y: auto;
 `
 
+const CopyEmailBtn = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1.25rem;
+  width: 100%;
+  padding: 1rem;
+  background: white;
+  color: ${({ theme }) => theme.colors.primary};
+  font-size: 1rem;
+  font-weight: 700;
+  border-radius: 14px;
+  border: 2px solid ${({ theme }) => theme.colors.primary};
+  cursor: pointer;
+  transition: background 0.15s;
+
+  &:hover { background: #f5f3ff; }
+`
+
 const ApplyBtn = styled.a`
   display: flex;
   align-items: center;
@@ -400,6 +429,7 @@ export default function JobsClient() {
   const [source, setSource] = useState('')
   const [keyword, setKeyword] = useState('')
   const [inputValue, setInputValue] = useState('')
+  const [minSalary, setMinSalary] = useState('')
   const [selectedJob, setSelectedJob] = useState<any>(null)
 
   const fetchJobs = useCallback(async (pg: number, reset: boolean) => {
@@ -410,6 +440,7 @@ export default function JobsClient() {
         ...(region && { region }),
         ...(source && { source }),
         ...(keyword && { keyword }),
+        ...(minSalary && { minSalary }),
       })
       const res = await fetch(`/api/jobs?${params}`)
       if (!res.ok) return
@@ -419,7 +450,7 @@ export default function JobsClient() {
     } finally {
       setLoading(false)
     }
-  }, [region, source, keyword])
+  }, [region, source, keyword, minSalary])
 
   useEffect(() => {
     setPage(1)
@@ -466,6 +497,9 @@ export default function JobsClient() {
         </Select>
         <Select value={source} onChange={e => setSource(e.target.value)}>
           {SOURCES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+        </Select>
+        <Select value={minSalary} onChange={e => setMinSalary(e.target.value)}>
+          {SALARY_RANGES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
         </Select>
       </FilterBar>
 
@@ -581,6 +615,16 @@ export default function JobsClient() {
                 <JobMap location={selectedJob.location} />
               )}
 
+              {selectedJob.url?.startsWith('mailto:') && (
+                <CopyEmailBtn onClick={() => {
+                  const email = selectedJob.url.replace('mailto:', '')
+                  navigator.clipboard.writeText(email)
+                  toast.success('이메일 주소가 복사됐어요.')
+                }}>
+                  <Copy size={18} />
+                  이메일 복사하기
+                </CopyEmailBtn>
+              )}
               <ApplyBtn href={selectedJob.url} target="_blank" rel="noopener noreferrer">
                 <ExternalLink size={18} />
                 지원하기
