@@ -1,4 +1,4 @@
-import { BetaAnalyticsDataClient } from '@google-analytics/data'
+import { BetaAnalyticsDataClient, protos } from '@google-analytics/data'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { NextResponse } from 'next/server'
@@ -59,17 +59,17 @@ export async function GET() {
       }),
     ])
 
-    const toRows = (res: Awaited<ReturnType<typeof client.runReport>>[0]) =>
+    const toRows = (res: protos.google.analytics.data.v1beta.IRunReportResponse) =>
       (res.rows ?? []).map(row => ({
         dims: row.dimensionValues?.map(d => d.value ?? '') ?? [],
         vals: row.metricValues?.map(m => Number(m.value ?? 0)) ?? [],
       }))
 
     return NextResponse.json({
-      sources: toRows(sources[0]),
-      pages: toRows(pages[0]),
-      countries: toRows(countries[0]),
-      daily: toRows(daily[0]),
+      sources: toRows(sources[0] ?? {}),
+      pages: toRows(pages[0] ?? {}),
+      countries: toRows(countries[0] ?? {}),
+      daily: toRows(daily[0] ?? {}),
     })
   } catch (e: any) {
     if (e.message === 'GOOGLE_SERVICE_ACCOUNT_JSON not set') {
