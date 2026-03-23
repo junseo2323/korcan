@@ -23,11 +23,10 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         const fetchRate = async () => {
             try {
-                const res = await fetch('https://open.er-api.com/v6/latest/CAD')
+                const res = await fetch('/api/exchange-rate')
                 if (res.ok) {
                     const data = await res.json()
-                    const rate = data.rates?.KRW
-                    if (rate) setExchangeRate(rate)
+                    if (data.rate) setExchangeRate(data.rate)
                 }
             } catch (e) {
                 console.error('Failed to fetch rate, using default', e)

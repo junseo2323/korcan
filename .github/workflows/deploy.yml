@@ -79,6 +79,9 @@ jobs:
             # Ensure NEXTAUTH_URL is correct
             sed -i 's|NEXTAUTH_URL=.*|NEXTAUTH_URL="https://korcan.cc"|g' .env
 
+            # Inject Alpha Vantage API key
+            grep -q "ALPHA_VANTAGE_API_KEY" .env && sed -i 's|ALPHA_VANTAGE_API_KEY=.*|ALPHA_VANTAGE_API_KEY="${{ secrets.ALPHA_VANTAGE_API_KEY }}"|g' .env || echo 'ALPHA_VANTAGE_API_KEY="${{ secrets.ALPHA_VANTAGE_API_KEY }}"' >> .env
+
             # Restart containers
             sudo docker compose -f docker-compose.prod.yml up -d
 
