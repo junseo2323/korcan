@@ -131,77 +131,6 @@ function parseAdzunaItem(item: any) {
   }
 }
 
-// ─── CanKorJobs (cankorjobs.ca) ────────────────────────────────────────────────
-
-const CANKOR_URL  = 'https://zcdinzncxvpthtvwcypd.supabase.co/rest/v1/job_posts'
-const CANKOR_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpjZGluem5jeHZwdGh0dndjeXBkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY1MTU3NjMsImV4cCI6MjA4MjA5MTc2M30.hl9lmcEgYYkfgYPV-5jx6PQxAGgZS189nDRFNr_8q4s'
-
-const CANKOR_CITY_MAP: Record<string, string> = {
-  toronto:   'on',
-  vancouver: 'bc',
-  calgary:   'ab',
-  edmonton:  'ab',
-  montreal:  'qc',
-  ottawa:    'on',
-  winnipeg:  'mb',
-  halifax:   'ns',
-}
-
-async function fetchCanKorJobs(): Promise<{ items: any[], error?: string }> {
-  try {
-    const res = await fetch(
-      `${CANKOR_URL}?select=id,title,company_name,description,service_city,city,province,address,formatted_address,lat,lng,employment_type,pay_type,pay_min,pay_max,apply_email,apply_phone,apply_link,created_at&status=eq.open&limit=500`,
-      { headers: { apikey: CANKOR_KEY, Authorization: `Bearer ${CANKOR_KEY}` } }
-    )
-    if (!res.ok) return { items: [], error: `cankorjobs: HTTP ${res.status}` }
-    return { items: await res.json() }
-  } catch (e: any) {
-    return { items: [], error: `cankorjobs: ${e?.message}` }
-  }
-}
-
-function parseCanKorJobsItem(item: any) {
-  const serviceCity = item.service_city?.toLowerCase() || ''
-  const region = CANKOR_CITY_MAP[serviceCity] || 'on'
-  const location = item.formatted_address || [item.address, item.city, item.province].filter(Boolean).join(', ') || item.service_city || null
-
-  let salary: string | null = null
-  let salaryMin: number | null = null
-  if (item.pay_min > 0 || item.pay_max > 0) {
-    salary = item.pay_min > 0 && item.pay_max > 0
-      ? `$${item.pay_min}–$${item.pay_max}`
-      : item.pay_min > 0 ? `$${item.pay_min}+` : null
-    const rawMin = item.pay_min > 0 ? item.pay_min : null
-    if (rawMin) {
-      salaryMin = item.pay_type === 'hourly' ? rawMin * 2080 : rawMin
-    }
-  }
-
-  const applyUrl = item.apply_link
-    || (item.apply_email ? `mailto:${item.apply_email}` : null)
-    || `https://cankorjobs.ca/${serviceCity}/jobs`
-
-  return {
-    externalId: `cankorjobs_${item.id}`,
-    source: 'cankorjobs',
-    title: item.title || '',
-    company: item.company_name || null,
-    location,
-    region,
-    description: item.description || null,
-    url: applyUrl,
-    salary,
-    salaryMin,
-    latitude: item.lat || null,
-    longitude: item.lng || null,
-    jobType: item.employment_type === 'full_time' ? 'FULL_TIME'
-           : item.employment_type === 'part_time' ? 'PART_TIME' : null,
-    category: '한인업체',
-    postedAt: item.created_at ? new Date(item.created_at) : null,
-    active: true,
-    fetchedAt: new Date(),
-  }
-}
 
 // ─── RemoteOK ──────────────────────────────────────────────────────────────────
 
@@ -288,12 +217,7 @@ export async function POST(req: NextRequest) {
     await upsertJobs(items.map(parseAdzunaItem), upserted, errors, fetchErrors)
   }
 
-  // 3. CanKorJobs (한인 채용)
-  const { items: ckItems, error: ckError } = await fetchCanKorJobs()
-  if (ckError) fetchErrors.push(ckError)
-  await upsertJobs(ckItems.map(parseCanKorJobsItem), upserted, errors, fetchErrors)
-
-  // 4. RemoteOK
+  // 3. RemoteOK
   const { items: roItems, error: roError } = await fetchRemoteOK()
   if (roError) fetchErrors.push(roError)
   await upsertJobs(roItems.map(parseRemoteOKItem), upserted, errors, fetchErrors)
