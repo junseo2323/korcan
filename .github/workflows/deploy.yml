@@ -96,7 +96,7 @@ jobs:
             sleep 15
 
             echo "Running Database Migration..."
-            sudo docker compose -f docker-compose.prod.yml exec -T app npx prisma migrate deploy
+            sudo docker compose -f docker-compose.prod.yml exec -T -e HOME=/tmp app npx prisma@5.22.0 migrate deploy
 
             # Prune unused images
             sudo docker image prune -f
